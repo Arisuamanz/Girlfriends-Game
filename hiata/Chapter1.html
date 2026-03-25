@@ -1,1 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hiata - Story Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800&display=swap');
 
+        :root {
+            color-scheme: dark;
+            --accent-pink: #ff5fb8;
+            --accent-purple: #8b5cf6;
+            --glass-bg: rgba(9, 11, 24, 0.58);
+            --glass-border: rgba(255, 255, 255, 0.14);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow: hidden;
+            touch-action: pan-y;
+            /* Latar belakang jika tiada gambar */
+            background: #05050b; 
+            font-family: 'Inter', sans-serif;
+        }
+
+        .waifu-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            pointer-events: none;
+            transform: scale(1.05);
+            transform-origin: top center;
+            opacity: 0;
+            transition: opacity 0.6s ease-in-out;
+            z-index: 5;
+        }
+
+        .waifu-img.active {
+            opacity: 1;
+            z-index: 10;
+        }
+
+        /* Gradient gelap dibuang, hanya tinggal bayang di bawah untuk kotak dialog */
+        #image-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            background: linear-gradient(180deg, transparent 0%, transparent 70%, rgba(0, 0, 0, 0.7) 100%);
+        }
+
+        .noise-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='white' fill-opacity='0.04'%3E%3Ccircle cx='12' cy='10' r='1'/%3E%3Ccircle cx='42' cy='30' r='1'/%3E%3Ccircle cx='80' cy='22' r='1'/%3E%3Ccircle cx='120' cy='44' r='1'/%3E%3Ccircle cx='160' cy='18' r='1'/%3E%3Ccircle cx='26' cy='78' r='1'/%3E%3Ccircle cx='65' cy='96' r='1'/%3E%3Ccircle cx='140' cy='110' r='1'/%3E%3Ccircle cx='90' cy='145' r='1'/%3E%3Ccircle cx='30' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.15;
+            mix-blend-mode: screen;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(34px);
+            opacity: 0.4;
+            pointer-events: none;
+            animation: floatOrb 14s ease-in-out infinite alternate;
+            z-index: 20;
+        }
+
+        .orb-pink { width: 240px; height: 240px; top: 8%; left: 8%; background: rgba(244, 114, 182, 0.15); }
+        .orb-violet { width: 280px; height: 280px; right: 8%; bottom: 12%; background: rgba(139, 92, 246, 0.15); animation-duration: 17s; }
+
+        #dialogue-container {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-out;
+            transform: translateY(22px) scale(0.985);
+            min-height: 220px; 
+        }
+
+        #dialogue-container.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .choice-btn {
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUpFade 0.4s ease-out forwards;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+        }
+
+        .choice-btn::after {
+            content: '›';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.72);
+            transition: transform 0.2s ease;
+        }
+
+        .choice-btn:hover::after { transform: translateY(-50%) translateX(4px); }
+        .choice-btn:nth-child(1) { animation-delay: 0.1s; }
+        .choice-btn:nth-child(2) { animation-delay: 0.2s; }
+
+        @keyframes slideUpFade {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.14);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .pulse-btn { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 105, 180, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); }
+        }
+
+        @keyframes floatOrb { 0% { transform: translate3d(0, 0, 0) scale(1); } 100% { transform: translate3d(18px, -24px, 0) scale(1.08); } }
+
+        /* Custom Styles for Control Buttons */
+        .control-btn {
+            transition: transform 0.1s ease, background-color 0.2s, color 0.2s, border-color 0.2s;
+        }
+        .control-btn:active {
+            transform: scale(0.92);
+        }
+        .control-btn.active {
+            background-color: rgba(255, 95, 184, 0.35); /* Accent Pink Glass */
+            color: #fff;
+            border-color: rgba(255, 95, 184, 0.6);
+        }
+
+        /* Log Overlay Style */
+        #log-overlay {
+            background: rgba(4, 6, 15, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        #log-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .log-entry {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 14px;
+            margin-bottom: 14px;
+        }
+        #log-content::-webkit-scrollbar {
+            width: 4px;
+        }
+        #log-content::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="text-white h-screen w-screen flex flex-col font-sans select-none antialiased">
+
+    <!-- MAIN APP SCREEN (Kawasan yang boleh di tap full screen) -->
+    <div id="app-screen" class="h-full w-full flex flex-col relative bg-black overflow-hidden cursor-pointer">
+        <div class="absolute inset-0 noise-overlay pointer-events-none z-20"></div>
+        <div class="orb orb-pink pointer-events-none"></div>
+        <div class="orb orb-violet pointer-events-none"></div>
+
+        <!-- HUD: Status & Controls -->
+        <div class="absolute top-4 left-4 right-4 z-40 flex items-start justify-between gap-3 pointer-events-none" id="top-ui">
+            <!-- Left: Status -->
+            <div class="px-4 py-3 border border-white/10 bg-black/30 rounded-full backdrop-blur-md pointer-events-auto h-fit">
+                <div class="text-[10px] uppercase tracking-[0.35em] text-white/45">Status</div>
+                <div class="mt-1 flex items-center gap-2 text-sm font-semibold text-white/90">
+                    <span class="w-2 h-2 rounded-full bg-green-400 shadow-[0_0_10px_rgba(74,222,128,0.9)]"></span>
+                    <span id="scene-status">Story Mode Active</span>
+                </div>
+            </div>
+
+            <!-- Right: Auto, Skip, Log Buttons -->
+            <div class="flex items-center gap-2 mt-1 pointer-events-auto">
+                <button id="auto-btn" class="control-btn px-4 py-2 border border-white/10 bg-black/30 rounded-full backdrop-blur-md text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Auto</button>
+                <button id="skip-btn" class="control-btn px-4 py-2 border border-white/10 bg-black/30 rounded-full backdrop-blur-md text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Skip</button>
+                <button id="log-btn" class="control-btn px-4 py-2 border border-white/10 bg-black/30 rounded-full backdrop-blur-md text-[10px] font-bold uppercase tracking-[0.2em] text-white/70">Log</button>
+            </div>
+        </div>
+
+        <!-- Image Container -->
+        <div class="flex-1 relative w-full h-full overflow-hidden pointer-events-none" id="image-container">
+            <img id="img-idle" src="https://i.postimg.cc/gk2XTCBB/Idle.jpg" class="waifu-img active" alt="Idle">
+            <img id="img-blush" src="https://i.postimg.cc/y8wDWk6R/Blushing-pipi-merah.jpg" class="waifu-img" alt="Blushing">
+            <img id="img-shy" src="https://i.postimg.cc/BZMtHhQn/Shyblush.jpg" class="waifu-img" alt="Shy">
+            <img id="img-cry" src="https://i.postimg.cc/PqW5xyRs/Cry.jpg" class="waifu-img" alt="Cry">
+            <img id="img-bodygoals" src="https://i.postimg.cc/Kj6nbQWd/Bodygoalsidle.jpg" class="waifu-img" alt="Body Goals">
+            <img id="img-smile-chest" src="https://i.postimg.cc/vZdWSqfx/Santaismiletangandidada.jpg" class="waifu-img" alt="Smile Hand on Chest">
+            <img id="img-thinking" src="https://i.postimg.cc/0Nk79ztv/Berfikircurious.jpg" class="waifu-img" alt="Thinking">
+            <img id="img-surprised" src="https://i.postimg.cc/KcRCDNPF/Sedikitterkejut.jpg" class="waifu-img" alt="Surprised">
+            <img id="img-slight-blush" src="https://i.postimg.cc/CxVtYp9W/Sedikitmalu.jpg" class="waifu-img" alt="Slight Blush">
+            <img id="img-chill-smile" src="https://i.postimg.cc/4dn2wfhd/Syukursmilechill.jpg" class="waifu-img" alt="Chill Smile">
+            <img id="img-shocked-blush" src="https://i.postimg.cc/mZz6Hrsm/Terkejutpipimerah.jpg" class="waifu-img" alt="Shocked Blush">
+            <img id="img-lookaway" src="https://i.postimg.cc/GmrMVJyC/Senyumsantaisambillihatarahlain.jpg" class="waifu-img" alt="Look Away">
+            <img id="img-waving" src="https://i.postimg.cc/Dzwxyv6C/Handwaving.jpg" class="waifu-img" alt="Waving">
+            <img id="img-balcony" src="https://i.postimg.cc/4dKwVWrc/Tangansebelahatasbalkonisantai.jpg" class="waifu-img" alt="Balcony Chill">
+        </div>
+
+        <!-- DIALOGUE UI -->
+        <div class="absolute bottom-[50px] left-4 right-4 z-30 flex flex-col gap-4 pointer-events-none" id="dialogue-wrapper">
+            
+            <!-- Choices Container -->
+            <div id="choices-container" class="w-full max-w-md mx-auto flex flex-col gap-3 hidden pointer-events-auto">
+                <button id="choice-1" class="choice-btn w-full bg-black/70 border border-white/20 rounded-[24px] py-4 pl-6 pr-12 text-left text-white text-[15px] font-bold tracking-wide hover:bg-white/20 active:scale-95 transition-all shadow-lg">
+                    Choice 1
+                </button>
+                <button id="choice-2" class="choice-btn w-full bg-black/70 border border-white/20 rounded-[24px] py-4 pl-6 pr-12 text-left text-white text-[15px] font-bold tracking-wide hover:bg-white/20 active:scale-95 transition-all shadow-lg">
+                    Choice 2
+                </button>
+            </div>
+
+            <!-- Dialogue Box -->
+            <div id="dialogue-container" class="dialogue-frame w-full max-w-xl mx-auto bg-black/60 rounded-[28px] p-6 md:p-8 relative shadow-2xl border border-white/10 opacity-0 overflow-hidden pointer-events-none backdrop-blur-sm">
+                <div class="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-pink-400/[0.05]"></div>
+                
+                <div id="speaker-badge" class="relative flex items-start justify-center mb-4 transition-opacity hidden">
+                    <div class="inline-flex items-center gap-2 bg-white text-black px-4 py-1.5 rounded-full text-xs font-black tracking-[0.3em] uppercase shadow-md">
+                        <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                        <span id="speaker-name">Hiata</span>
+                    </div>
+                </div>
+
+                <p id="dialogue-text" class="relative text-white text-[16px] md:text-lg leading-relaxed font-medium tracking-wide pr-2">
+                    ...
+                </p>
+            </div>
+        </div>
+
+        <!-- END SCREEN OVERLAY (Special UI) -->
+        <div id="end-screen" class="absolute inset-0 z-50 flex flex-col justify-center items-center bg-black/70 backdrop-blur-md opacity-0 pointer-events-none transition-opacity duration-1000">
+            <h1 id="end-title" class="text-4xl md:text-5xl font-black text-center mb-4 tracking-[0.2em] uppercase bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_20px_rgba(255,95,184,0.4)] transition-transform duration-1000 scale-90" style="font-family: 'Outfit', sans-serif;">
+                Tamat Chapter 1
+            </h1>
+            <div class="flex items-center gap-3 mt-6">
+                <div class="loader"></div>
+                <p class="text-white/70 text-xs tracking-widest uppercase">Kembali ke menu utama...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- LOG OVERLAY -->
+    <div id="log-overlay" class="fixed inset-0 p-6 flex flex-col z-[100]">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-black uppercase tracking-[0.3em] text-white">Story Log</h2>
+            <button id="close-log-btn" class="w-10 h-10 flex items-center justify-center bg-white/10 border border-white/20 rounded-full hover:bg-white/20 transition-all">✕</button>
+        </div>
+        <div id="log-content" class="flex-1 overflow-y-auto pr-3">
+            <!-- Log entries will be added here -->
+        </div>
+    </div>
+
+    <script>
+        const appScreen = document.getElementById('app-screen');
+        
+        // Imej rujukan
+        const imgIdle = document.getElementById('img-idle');
+        const imgBlush = document.getElementById('img-blush'); 
+        const imgShy = document.getElementById('img-shy'); 
+        const imgCry = document.getElementById('img-cry');
+        const imgBody = document.getElementById('img-bodygoals');
+        const imgSmileChest = document.getElementById('img-smile-chest');
+        const imgThinking = document.getElementById('img-thinking');
+        const imgSurprised = document.getElementById('img-surprised');
+        const imgSlightBlush = document.getElementById('img-slight-blush');
+        const imgChillSmile = document.getElementById('img-chill-smile');
+        const imgShockedBlush = document.getElementById('img-shocked-blush');
+        const imgLookAway = document.getElementById('img-lookaway');
+        const imgWaving = document.getElementById('img-waving');
+        const imgBalcony = document.getElementById('img-balcony');
+
+        // UI Controls
+        const dialogueWrapper = document.getElementById('dialogue-wrapper');
+        const dialogueContainer = document.getElementById('dialogue-container');
+        const dialogueText = document.getElementById('dialogue-text');
+        const speakerBadge = document.getElementById('speaker-badge');
+        const speakerName = document.getElementById('speaker-name');
+        const sceneStatus = document.getElementById('scene-status');
+        const topUI = document.getElementById('top-ui');
+        
+        const choicesContainer = document.getElementById('choices-container');
+        const choice1Btn = document.getElementById('choice-1');
+        const choice2Btn = document.getElementById('choice-2');
+
+        const autoBtn = document.getElementById('auto-btn');
+        const skipBtn = document.getElementById('skip-btn');
+        const logBtn = document.getElementById('log-btn');
+        
+        const logOverlay = document.getElementById('log-overlay');
+        const logContent = document.getElementById('log-content');
+        const closeLogBtn = document.getElementById('close-log-btn');
+
+        // End Screen UI
+        const endScreen = document.getElementById('end-screen');
+        const endTitle = document.getElementById('end-title');
+
+        let typeInterval = null;
+        let isTyping = false;
+        let currentFullText = "";
+        let currentStoryIndex = 0;
+
+        // Auto State
+        let isAuto = false;
+
+        // Jalan Cerita
+        const mainStory = [
+            { type: 'narrator', text: "Cahaya bulan purnama yang terang menyinari balkoni batu yang sepi. Angin malam bertiup lembut. Di situ, Hiata sedang berdiri membelakangkan cahaya bulan. Gaun birunya yang elegan namun sangat ketat memeluk sempurna bentuk tubuhnya yang menawan, menonjolkan aset 'body goals' yang dimilikinya. Wajahnya kemerahan sebaik sahaja melihat kehadiran saya.", media: imgBody },
+            { type: 'dialogue', speaker: 'Hiata', text: "A-awak dah sampai... S-saya ingat awak lupa janji kita nak tengok bulan sama-sama malam ni. S-saya tunggu agak lama tau kat balkoni ni... t-tapi takpe, asalkan awak ada kat sini dengan saya sekarang.", media: imgWaving },
+            { type: 'dialogue', speaker: 'Hiata', text: "C-cantik tak bulan malam ni? Terang sangat... s-sama macam dalam cerita dongeng yang saya baca haritu. Tapi... erm, angin agak sejuk sikit la malam ni... m-mungkin sebab saya pakai baju ni.", media: imgBalcony },
+            { type: 'choice', choices: [{ text: "Awak nampak sejuk, mari saya peluk." }, { text: "Biar saya panaskan awak malam ni." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "Ehh?! P-peluk?! T-tapi... err... b-baiklah kalau awak nak peluk... Saya tak kisah. S-sebenarnya, baju gaun biru ni macam nipis sikit...", media: imgShockedBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "Saya main beli je haritu sebab nampak cantik dekat patung tu, t-tapi langsung tak terfikir pula pasal kain dia tahan sejuk ke tak.", media: imgThinking },
+            { type: 'dialogue', speaker: 'Hiata', text: "Awak... awak rasa baju ni okay ke kat saya? K-kawan saya cakap macam ketat sangat dekat bahagian dada... l-lepas tu menonjol sangat...", media: imgSlightBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-saya ingat diorang bergurau, t-tapi bila saya pakai... m-macam sempit nafas sikit bila bernafas. S-saya rasa segan pula bila awak asyik tenung dari tadi...", media: imgShy },
+            { type: 'choice', choices: [{ text: "Baju tu sangat cantik dan sesuai dengan bentuk badan awak." }, { text: "Awak sentiasa nampak sempurna dan seksi di mata saya." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "Heee... Y-yeke? Terima kasih... A-awak ni selalu sangat puji saya macam tu. B-buat muka saya panas tau.", media: imgChillSmile },
+            { type: 'dialogue', speaker: 'Hiata', text: "Tapi... s-saya suka sangat bila awak puji. M-macam rasa dihargai. Lagipun... s-saya pakai gaun ni memang khas untuk awak tau... S-saya nak nampak menawan depan mata awak je.", media: imgSmileChest },
+            { type: 'dialogue', speaker: 'Hiata', text: "T-tapi saya tak pandai sangat bab berhias fesyen ni... kadang-kadang saya tersalah padan warna kasut dengan baju sebab saya tak tahu beza sangat. K-kalau saya nampak pelik atau kekok, awak bagitahu tau, jangan diam je!", media: imgLookAway },
+            { type: 'choice', choices: [{ text: "Tak pelik langsung, awak memang menawan semulajadi." }, { text: "Saya suka semua benda pasal awak, tak kisah apa pun." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "A-awak ni... Suka sangat buat jantung saya berdegup kencang tau... E-eh, tengok tu! Ada bintang jatuh kat sana!", media: imgSurprised },
+            { type: 'dialogue', speaker: 'Hiata', text: "C-cepat tutup mata dan buat hajat! ...Dah? A-awak hajat apa tadi? E-eh, tak payah bagitahu, orang kata nanti tak makbul pula!", media: imgChillSmile },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-saya... saya pun dah buat hajat saya. S-saya hajat... err... r-rahsia! T-tapi... hajat saya tu ada kaitan dengan kita berdua. H-harap-harap la bulan dengan bintang dengar apa yang saya bisik tadi. Awak rasa... diorang dengar tak suara hati saya yang senyap ni?", media: imgThinking },
+            { type: 'choice', choices: [{ text: "Mestilah, alam semesta dengar hajat cinta kita." }, { text: "Apa sahaja hajat awak, saya akan tolong tunaikan." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "B-betul ni? A-awak akan tolong tunaikan? Janji tau! K-kalau awak tipu, saya... saya tak tahu nak buat apa, s-sebab saya cuma ada awak je.", media: imgSmileChest },
+            { type: 'dialogue', speaker: 'Hiata', text: "Kadang-kadang saya duduk terfikir sendirian... kenapa awak pilih orang macam saya? S-saya ni dahlah pemalu tak bertempat, lepas tu kawan-kawan selalu gelar saya lurus bendul... a-atau orang putih kata... err... 'dumb'?", media: imgShy },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-saya memang kadang-kadang lambat 'tangkap' apa orang cakap, t-tapi awak sentiasa layan saya dengan lembut. S-saya rasa saya ni perempuan paling bertuah dapat awak.", media: imgChillSmile },
+            { type: 'choice', choices: [{ text: "Saya sayang awak seadanya, Hiata." }, { text: "Sifat lurus bendul awak tu yang buat saya jatuh hati." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "Sifat saya tu buat awak jatuh hati?! M-mana ada benda tu comel...", media: imgShockedBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-saya rasa saya banyak menyusahkan awak je sebab asyik tanya soalan pelik-pelik bila saya tak faham. T-tapi... bila awak cakap macam tu... s-saya rasa lega sangat dalam hati ni.", media: imgSlightBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-sebenarnya, dari awal perjumpaan kita tadi... saya nak cakap sesuatu... t-tapi saya segan... B-boleh tak kalau... kalau awak pegang kedua-dua belah tangan saya sekarang?", media: imgShy },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-sebab tangan saya sejuk sangat... d-dan saya rasa macam nak dekat lagi dengan awak, rasa kehangatan awak.", media: imgShy },
+            { type: 'choice', choices: [{ text: "Boleh sangat, meh sini tangan awak biar saya genggam." }, { text: "Saya akan pegang dan panaskan tangan awak sekarang." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "H-hangatnya tangan awak... T-terima kasih... S-saya suka bila kita berdua dapat luangkan masa berdua-duaan macam ni.", media: imgChillSmile },
+            { type: 'dialogue', speaker: 'Hiata', text: "Takde orang lain yang mengganggu, cuma kita berdua, disaksikan bulan purnama d-dan bintang-bintang... T-tadi petang saya ada baca dalam satu majalah, dia kata kalau pasangan tenung bulan penuh sama-sama sambil berpegangan tangan... d-diorang punya cinta akan diikat kuat selamanya.", media: imgBalcony },
+            { type: 'dialogue', speaker: 'Hiata', text: "A-awak rasa... benda mitos macam tu boleh jadi kenyataan ke? S-saya harap sangat betul... s-sebab saya nak kekal di sisi awak.", media: imgThinking },
+            { type: 'choice', choices: [{ text: "Saya pun harap mitos tu jadi kenyataan untuk kita." }, { text: "Cinta kita dah sedia kuat tanpa mitos tu sekalipun." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "A-awak... kata-kata awak selalu manis... h-hati saya rasa macam nak terbang bila dengar awak cakap macam tu. Y-ya, cinta kita memang dah kuat kan?", media: imgSmileChest },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-saya tahu saya mungkin tak pandai masak lauk pauk yang susah-susah macam perempuan lain... a-atau tak sepintar orang lain bila bersembang topik berat...", media: imgLookAway },
+            { type: 'dialogue', speaker: 'Hiata', text: "t-tapi... s-saya janji saya akan sedaya upaya cuba jadi teman wanita yang paling sempurna untuk awak. Cuma... a-awak kena banyak bersabar dan ajar saya banyak benda tau... J-jangan ketawakan saya kalau saya terkial-kial buat silap...", media: imgCry },
+            { type: 'choice', choices: [{ text: "Saya takkan gelak, saya akan sentiasa bimbing awak." }, { text: "Jangan risau, kita harungi semuanya perlahan-lahan sama-sama." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "Hee... tenang hati saya dengar. Awak memang satu-satunya pelindung saya.", media: imgSmileChest },
+            { type: 'dialogue', speaker: 'Hiata', text: "E-eh... a-awak... kenapa tiba-tiba awak tenung bibir saya macam tu? A-awak nak... c-cium saya ke? D-dekat sini?", media: imgShockedBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "T-tapi... tempat ni macam terbuka sangat je kat balkoni ni... m-malu la kalau ada jiran nampak dari jauh... T-tapi... k-kalau awak nak sangat... s-saya... saya pun sebenarnya teringin juga. T-tolong... tutup mata saya... s-sekarang...", media: imgShy },
+            { type: 'choice', choices: [{ text: "Saya akan cium awak dengan lembut." }, { text: "Biar saya rasa manis bibir awak malam ni." }] },
+            { type: 'dialogue', speaker: 'Hiata', text: "Mmph... A-awak... lembutnya... S-saya tak pernah rasa macam ni... K-kaki saya rasa macam lemah tiba-tiba bila awak buat macam tu...", media: imgBlush },
+            { type: 'dialogue', speaker: 'Hiata', text: "S-sebab tu la saya pegang baju awak kuat-kuat ni, t-takut saya jatuh. S-saya rasa macam dalam mimpi indah... A-awak betul-betul buat saya gila bayang la...", media: imgSmileChest },
+            { type: 'dialogue', speaker: 'Hiata', text: "T-tolong... peluk pinggang saya... j-jangan lepaskan saya malam ni. S-saya nak tidur berbantalkan lengan awak sambil tengok bulan tu...", media: imgBlush }
+        ];
+
+        // --- ADD TO LOG ---
+        function addToLog(speaker, text) {
+            const entry = document.createElement('div');
+            entry.className = "log-entry";
+            
+            const nameEl = document.createElement('div');
+            nameEl.className = "text-[11px] font-black uppercase text-pink-400 mb-1 tracking-widest";
+            nameEl.innerText = speaker || "System";
+            
+            const textEl = document.createElement('div');
+            textEl.className = "text-[15px] text-white/90 leading-relaxed";
+            textEl.innerText = text;
+
+            entry.appendChild(nameEl);
+            entry.appendChild(textEl);
+            logContent.appendChild(entry);
+            
+            logContent.scrollTop = logContent.scrollHeight;
+        }
+
+        // --- UPDATE BTN STATES ---
+        function updateBtnStates() {
+            autoBtn.classList.toggle('active', isAuto);
+        }
+
+        // --- ENGINE LOGIC ---
+        function typeWriter(text, isPrompt = false) {
+            clearInterval(typeInterval);
+            isTyping = true;
+            currentFullText = text || "..."; 
+            dialogueContainer.classList.add('show');
+            dialogueText.innerHTML = '';
+            
+            let i = 0;
+            let typingSpeed = 30; // Kelajuan normal
+
+            typeInterval = setInterval(() => {
+                if (i < currentFullText.length) {
+                    dialogueText.innerHTML += currentFullText.charAt(i);
+                    i++;
+                } else {
+                    finishTyping(isPrompt);
+                }
+            }, typingSpeed);
+        }
+
+        function finishTyping(isPrompt = false) {
+            clearInterval(typeInterval);
+            dialogueText.innerHTML = currentFullText;
+            isTyping = false;
+            
+            if (!isPrompt && currentStoryIndex < mainStory.length) {
+                if (isAuto) {
+                    setTimeout(() => { if(isAuto && !isTyping) advanceStory(); }, 1500);
+                }
+            }
+        }
+
+        function triggerAction(actionImgElement) {
+            const targetImg = actionImgElement || imgIdle;
+            document.querySelectorAll('.waifu-img').forEach(img => img.classList.remove('active'));
+            targetImg.classList.add('active');
+        }
+
+        function playStoryNode(index) {
+            const node = mainStory[index];
+            if (!node) return;
+
+            triggerAction(node.media);
+
+            if (node.type === 'narrator') {
+                speakerBadge.classList.add('hidden');
+                sceneStatus.innerText = 'Scene Narration';
+                addToLog('Narrator', node.text);
+                typeWriter(node.text);
+            } else if (node.type === 'dialogue') {
+                speakerBadge.classList.remove('hidden');
+                speakerName.innerText = node.speaker || 'Hiata';
+                sceneStatus.innerText = `${node.speaker || 'Hiata'} Speaking`;
+                addToLog(node.speaker, node.text);
+                typeWriter(node.text);
+            } else if (node.type === 'choice') {
+                // Jangan matikan Auto bila choice muncul, supaya ia berterusan lepas pilih
+                updateBtnStates();
+
+                speakerBadge.classList.add('hidden');
+                sceneStatus.innerText = 'Awaiting Choice';
+                
+                setTimeout(() => {
+                    choicesContainer.classList.remove('hidden');
+                    choice1Btn.innerText = node.choices[0].text;
+                    choice2Btn.innerText = node.choices[1].text;
+                    
+                    const choiceHandler = (e, text) => {
+                        e.stopPropagation(); // Elak appScreen click listener dari tertrigger
+                        addToLog('You (Choice)', text);
+                        choicesContainer.classList.add('hidden');
+                        advanceStory();
+                    };
+                    choice1Btn.onclick = (e) => choiceHandler(e, node.choices[0].text);
+                    choice2Btn.onclick = (e) => choiceHandler(e, node.choices[1].text);
+                }, 300);
+            }
+        }
+
+        function triggerEndScreen() {
+            // Sembunyikan semua UI permainan
+            dialogueWrapper.classList.add('hidden');
+            topUI.classList.add('hidden');
+            
+            // Matikan state auto
+            isAuto = false;
+            updateBtnStates();
+
+            // Tunjuk UI Tamat Chapter
+            endScreen.classList.remove('pointer-events-none', 'opacity-0');
+            endScreen.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                endTitle.classList.remove('scale-90');
+                endTitle.classList.add('scale-100');
+            }, 100);
+
+            // Redirect ke index.html selepas 3.5 saat
+            setTimeout(() => {
+                window.location.href = "index.html";
+            }, 3500);
+        }
+
+        function advanceStory() {
+            currentStoryIndex++;
+            if (currentStoryIndex < mainStory.length) {
+                playStoryNode(currentStoryIndex);
+            } else {
+                // THE END (Tamat Chapter 1)
+                triggerEndScreen();
+            }
+        }
+
+        // FULL SCREEN TAP TO CONTINUE
+        appScreen.addEventListener('click', (e) => {
+            if (e.target.closest('.choice-btn') || e.target.closest('.control-btn')) return;
+
+            const currentNode = mainStory[currentStoryIndex];
+            if (currentNode && currentNode.type === 'choice') {
+                if (isTyping) finishTyping(true);
+                return;
+            }
+
+            // Jika cerita dah habis, jangan buat apa-apa
+            if (currentStoryIndex >= mainStory.length) return;
+
+            if (isTyping) {
+                finishTyping();
+            } else {
+                isAuto = false;
+                updateBtnStates();
+                advanceStory();
+            }
+        });
+
+        // BUTTON LISTENERS
+        autoBtn.addEventListener('click', () => {
+            isAuto = !isAuto;
+            updateBtnStates();
+            
+            const node = mainStory[currentStoryIndex];
+            if (isAuto && !isTyping && node && node.type !== 'choice') {
+                advanceStory();
+            }
+        });
+
+        // FUNGSI SKIP TERUS KE HUJUNG CERITA
+        skipBtn.addEventListener('click', () => {
+            // Hentikan sebarang teks yang sedang menaip
+            clearInterval(typeInterval);
+            isTyping = false;
+            
+            // Matikan fungsi Auto
+            isAuto = false;
+            updateBtnStates();
+            
+            // Sembunyikan bekas pilihan sekiranya ia sedang aktif
+            choicesContainer.classList.add('hidden');
+
+            // Terus setkan indeks ke hujung cerita dan panggil End Screen
+            currentStoryIndex = mainStory.length;
+            triggerEndScreen();
+        });
+
+        logBtn.addEventListener('click', () => {
+            logOverlay.classList.add('active');
+        });
+
+        closeLogBtn.addEventListener('click', () => {
+            logOverlay.classList.remove('active');
+        });
+
+        // AUTO START (Tanpa Muka Depan)
+        window.onload = () => {
+            setTimeout(() => {
+                currentStoryIndex = 0;
+                playStoryNode(0);
+            }, 300);
+        };
+
+    </script>
+</body>
+</html>
