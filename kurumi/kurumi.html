@@ -1,0 +1,2234 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kurumi - Teman Maya</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Outfit:wght@500;600;700;800&display=swap');
+
+        :root {
+            color-scheme: dark;
+            --accent-pink: #ff5fb8;
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #38bdf8;
+            --glass-bg: rgba(9, 11, 24, 0.58);
+            --glass-border: rgba(255, 255, 255, 0.14);
+            --ui-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            overflow: hidden;
+            touch-action: pan-y;
+            background:
+                radial-gradient(circle at top, rgba(139, 92, 246, 0.22), transparent 28%),
+                radial-gradient(circle at 80% 20%, rgba(244, 114, 182, 0.18), transparent 22%),
+                linear-gradient(180deg, #03030a 0%, #090914 46%, #05050b 100%);
+            font-family: 'Inter', sans-serif;
+        }
+
+        #app-screen {
+            height: 100svh;
+            position: fixed;
+            inset: 0;
+        }
+
+        .waifu-vid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: top center;
+            pointer-events: none;
+            transform: scale(1.2);
+            transform-origin: top center;
+            filter: saturate(1.05) contrast(1.04);
+        }
+
+        #video-container::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 15;
+            background:
+                linear-gradient(180deg, rgba(3, 6, 18, 0.48) 0%, rgba(3, 6, 18, 0.06) 30%, rgba(2, 6, 23, 0.14) 62%, rgba(2, 6, 23, 0.82) 100%),
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.05), transparent 50%);
+        }
+
+        .hero-backdrop {
+            background:
+                radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.1), transparent 32%),
+                linear-gradient(180deg, rgba(7, 10, 25, 0.3), rgba(4, 4, 10, 0.92));
+        }
+
+        .noise-overlay {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='white' fill-opacity='0.04'%3E%3Ccircle cx='12' cy='10' r='1'/%3E%3Ccircle cx='42' cy='30' r='1'/%3E%3Ccircle cx='80' cy='22' r='1'/%3E%3Ccircle cx='120' cy='44' r='1'/%3E%3Ccircle cx='160' cy='18' r='1'/%3E%3Ccircle cx='26' cy='78' r='1'/%3E%3Ccircle cx='65' cy='96' r='1'/%3E%3Ccircle cx='140' cy='110' r='1'/%3E%3Ccircle cx='90' cy='145' r='1'/%3E%3Ccircle cx='30' cy='150' r='1'/%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.2;
+            mix-blend-mode: soft-light;
+            pointer-events: none;
+        }
+
+        .vignette {
+            background: radial-gradient(circle at center, transparent 34%, rgba(0, 0, 0, 0.58) 100%);
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 9999px;
+            filter: blur(34px);
+            opacity: 0.6;
+            pointer-events: none;
+            animation: floatOrb 14s ease-in-out infinite alternate;
+        }
+
+        .orb-pink {
+            width: 240px;
+            height: 240px;
+            top: 8%;
+            left: 8%;
+            background: rgba(244, 114, 182, 0.2);
+        }
+
+        .orb-violet {
+            width: 280px;
+            height: 280px;
+            right: 8%;
+            bottom: 12%;
+            background: rgba(139, 92, 246, 0.2);
+            animation-duration: 17s;
+        }
+
+        .orb-cyan {
+            width: 180px;
+            height: 180px;
+            top: 32%;
+            right: 22%;
+            background: rgba(56, 189, 248, 0.15);
+            animation-duration: 12s;
+        }
+
+        .intro-panel,
+        .hud-pill {
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+        }
+
+        .intro-panel {
+            position: relative;
+            overflow: hidden;
+            border-radius: 32px;
+            padding: 28px;
+            background: linear-gradient(180deg, rgba(7, 10, 24, 0.82), rgba(14, 18, 37, 0.55));
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.48);
+        }
+
+        .intro-panel::before,
+        .dialogue-frame::before {
+            content: '';
+            position: absolute;
+            inset: 1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.11), transparent 28%, transparent 72%, rgba(255, 255, 255, 0.06));
+            pointer-events: none;
+        }
+
+        .intro-panel::after {
+            content: '';
+            position: absolute;
+            inset: -40% auto auto -10%;
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.26), transparent 70%);
+            filter: blur(8px);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .hud-pill {
+            border-radius: 999px;
+            border: 1px solid var(--glass-border);
+            background: linear-gradient(180deg, rgba(15, 23, 42, 0.74), rgba(2, 6, 23, 0.54));
+            box-shadow: var(--ui-shadow);
+        }
+
+        .hud-pill-clear {
+            border-radius: 999px;
+            background: transparent;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+        }
+
+        .affection-score-clear {
+            background: transparent;
+            border: none !important;
+            box-shadow: none !important;
+        }
+
+        .hud-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            display: inline-block;
+            background: #4ade80;
+            box-shadow: 0 0 14px rgba(74, 222, 128, 0.9);
+        }
+
+        .primary-cta {
+            position: relative;
+            overflow: hidden;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            box-shadow: 0 18px 40px rgba(236, 72, 153, 0.36);
+            transition: transform 0.25s ease, box-shadow 0.25s ease, filter 0.25s ease;
+        }
+
+        .primary-cta:hover {
+            transform: translateY(-2px) scale(1.01);
+            box-shadow: 0 22px 54px rgba(236, 72, 153, 0.42);
+            filter: brightness(1.04);
+        }
+
+        .primary-cta::after {
+            content: '';
+            position: absolute;
+            inset: -40%;
+            background: linear-gradient(120deg, transparent 28%, rgba(255, 255, 255, 0.26), transparent 56%);
+            transform: translateX(-120%);
+            animation: shimmerMove 4.2s linear infinite;
+        }
+
+        .ui-card {
+            border-radius: 28px;
+            background: transparent;
+            border: none;
+            box-shadow: none;
+        }
+
+        .action-vid {
+            opacity: 0;
+            z-index: 10;
+            transition: opacity 0.2s ease-in-out;
+            display: block;
+        }
+
+        .action-vid.active {
+            opacity: 1;
+        }
+
+        #video-idle {
+            z-index: 5;
+            display: block;
+        }
+
+        #dialogue-container {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-out;
+            transform: translateY(22px) scale(0.985);
+        }
+
+        #dialogue-container.show {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .choice-btn {
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            transform: translateY(10px);
+            animation: slideUpFade 0.4s ease-out forwards;
+            box-shadow: 0 14px 34px rgba(0, 0, 0, 0.28);
+        }
+
+        .choice-btn::after {
+            content: '›';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 22px;
+            color: rgba(255, 255, 255, 0.72);
+            transition: transform 0.2s ease;
+        }
+
+        .choice-btn:hover::after {
+            transform: translateY(-50%) translateX(4px);
+        }
+
+        .choice-btn:nth-child(1) { animation-delay: 0.1s; }
+        .choice-btn:nth-child(2) { animation-delay: 0.2s; }
+
+        @keyframes slideUpFade {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .action-btn-anim {
+            animation: popBounce 1.15s infinite alternate;
+        }
+
+        @keyframes popBounce {
+            0% {
+                transform: translateY(0) scale(1);
+                box-shadow: 0 0 0 0 rgba(236, 72, 153, 0.45);
+            }
+            100% {
+                transform: translateY(-4px) scale(1.05);
+                box-shadow: 0 0 0 18px rgba(236, 72, 153, 0);
+            }
+        }
+
+        .qte-panel {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 18px 20px;
+            border-radius: 30px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.025));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 44px rgba(0, 0, 0, 0.34);
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+        }
+
+        .side-event-panel {
+            align-items: stretch;
+            width: min(260px, calc(100vw - 32px));
+            overflow: hidden;
+        }
+
+        .side-event-button {
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.92), rgba(139, 92, 246, 0.92));
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+            color: white;
+            font-weight: 800;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            padding: 14px 18px;
+            box-shadow: 0 14px 34px rgba(236, 72, 153, 0.34);
+            transition: transform 0.18s ease, filter 0.18s ease;
+        }
+
+        .side-event-button:active {
+            transform: scale(0.96);
+            filter: brightness(0.96);
+        }
+
+        .gift-lane {
+            position: relative;
+            height: 78px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: linear-gradient(180deg, rgba(10, 14, 26, 0.75), rgba(17, 24, 39, 0.56));
+            overflow: hidden;
+        }
+
+        .gift-lane::after {
+            content: '';
+            position: absolute;
+            inset: 50% 22px auto 22px;
+            height: 2px;
+            transform: translateY(-50%);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.26), rgba(255, 255, 255, 0.08));
+            border-radius: 999px;
+        }
+
+        .gift-target {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: inset 0 0 18px rgba(255, 255, 255, 0.06);
+            font-size: 24px;
+        }
+
+        .gift-drag {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 56px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(255, 214, 102, 0.98), rgba(251, 146, 60, 0.92));
+            box-shadow: 0 16px 30px rgba(251, 146, 60, 0.28);
+            font-size: 28px;
+            user-select: none;
+            touch-action: none;
+            cursor: grab;
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .gift-drag.dragging {
+            cursor: grabbing;
+            transition: none;
+            box-shadow: 0 20px 36px rgba(251, 146, 60, 0.4);
+        }
+
+        .gift-projectile {
+            position: fixed;
+            z-index: 44;
+            font-size: 36px;
+            pointer-events: none;
+            filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.36));
+        }
+
+        .right-control-dock {
+            position: absolute;
+            right: 12px;
+            top: 170px;
+            z-index: 41;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @media (min-width: 640px) {
+            .right-control-dock {
+                top: 190px;
+            }
+        }
+
+        .right-control-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 58px;
+            height: 58px;
+            padding: 0;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.04));
+            color: white;
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3);
+            transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
+        }
+
+        .right-control-btn:hover {
+            transform: translateY(-1px);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06));
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .right-control-btn.is-alert {
+            border-color: rgba(251, 191, 36, 0.45);
+            box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(251, 191, 36, 0.18), 0 0 28px rgba(251, 191, 36, 0.12);
+            animation: dockAlertPulse 1.4s ease-in-out infinite alternate;
+        }
+
+        .right-control-btn.is-muted {
+            opacity: 0.72;
+        }
+
+        .right-control-btn:active {
+            transform: scale(0.97);
+        }
+
+        .right-control-icon {
+            width: 40px;
+            height: 40px;
+            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 20px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+
+        .dock-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: #f8fafc;
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.9), rgba(139, 92, 246, 0.92));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 12px 26px rgba(0, 0, 0, 0.35);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dock-icon::after {
+            content: '';
+            position: absolute;
+            inset: -30%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.25), transparent 60%);
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .dock-icon svg {
+            width: 22px;
+            height: 22px;
+        }
+
+        .dock-icon--character {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(99, 102, 241, 0.92));
+        }
+
+        .dock-icon--story {
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.9), rgba(249, 115, 22, 0.92));
+        }
+
+        .story-overlay {
+            position: absolute;
+            inset: 0;
+            z-index: 60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(3, 6, 18, 0.72);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .story-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .story-panel {
+            width: min(440px, 92vw);
+            border-radius: 28px;
+            padding: 24px;
+            background: linear-gradient(180deg, rgba(14, 18, 37, 0.95), rgba(7, 10, 24, 0.9));
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .story-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .story-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .story-subtitle {
+            margin-top: 6px;
+            font-size: 13px;
+            color: rgba(248, 250, 252, 0.64);
+        }
+
+        .story-close-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-weight: 700;
+            transition: transform 0.18s ease, background 0.18s ease;
+        }
+
+        .story-close-btn:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .story-chapters {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .story-chapter-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 18px;
+            text-align: left;
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.06);
+            color: white;
+            transition: transform 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+        }
+
+        .story-chapter-btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            border-color: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .story-chapter-btn.is-available {
+            box-shadow: 0 14px 28px rgba(56, 189, 248, 0.18);
+        }
+
+        .story-chapter-btn.is-locked {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .chapter-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .chapter-badge {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.32em;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .chapter-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .chapter-desc {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.65);
+        }
+
+        .chapter-action {
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.92), rgba(129, 140, 248, 0.92));
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        .chapter-lock {
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .story-hint {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(248, 250, 252, 0.6);
+            text-align: center;
+        }
+
+        #app-screen.side-event-open #right-control-dock {
+            display: none;
+        }
+
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.14);
+            border-top: 3px solid #fff;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse-btn {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 105, 180, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 105, 180, 0); }
+        }
+
+        .floating-heart {
+            position: absolute;
+            font-size: 24px;
+            pointer-events: none;
+            z-index: 40;
+            animation: floatUp 1.5s ease-out forwards;
+            opacity: 1;
+            filter: drop-shadow(0 8px 20px rgba(0, 0, 0, 0.35));
+        }
+
+        .rainbow-heart {
+            animation-duration: var(--heart-duration, 1.8s);
+            filter: drop-shadow(0 0 16px var(--heart-color, rgba(255, 255, 255, 0.75)));
+        }
+
+        .celebration-flash {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 42;
+            background:
+                radial-gradient(circle at center, rgba(255, 255, 255, 0.22), rgba(255, 105, 180, 0.18) 25%, rgba(56, 189, 248, 0.14) 45%, transparent 72%);
+            animation: celebrationFlash 1.2s ease-out forwards;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.5); opacity: 1; }
+            50% { transform: translateY(-50px) scale(1.2); opacity: 0.84; }
+            100% { transform: translateY(-100px) scale(1); opacity: 0; }
+        }
+
+        @keyframes celebrationFlash {
+            0% { opacity: 0; }
+            12% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        @keyframes maxAffectionGlow {
+            0%, 100% {
+                box-shadow: 0 0 24px rgba(236, 72, 153, 0.22);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 36px rgba(236, 72, 153, 0.44), 0 0 56px rgba(56, 189, 248, 0.22);
+                transform: scale(1.06);
+            }
+        }
+
+        .max-affection-pulse {
+            animation: maxAffectionGlow 0.8s ease-in-out 2;
+        }
+
+        .pop-anim {
+            animation: pop 0.3s ease-in-out;
+        }
+
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        .glass-reflection {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0.06) 30%, rgba(255, 255, 255, 0) 100%);
+        }
+
+        @keyframes floatOrb {
+            0% { transform: translate3d(0, 0, 0) scale(1); }
+            100% { transform: translate3d(18px, -24px, 0) scale(1.08); }
+        }
+
+        @keyframes shimmerMove {
+            0% { transform: translateX(-120%); }
+            100% { transform: translateX(120%); }
+        }
+
+        @keyframes dockAlertPulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(251, 191, 36, 0.12), 0 0 10px rgba(251, 191, 36, 0.08);
+            }
+            100% {
+                transform: scale(1.04);
+                box-shadow: 0 18px 38px rgba(0, 0, 0, 0.34), 0 0 0 1px rgba(251, 191, 36, 0.2), 0 0 30px rgba(251, 191, 36, 0.18);
+            }
+        }
+    </style>
+</head>
+<body class="text-white h-screen w-screen flex flex-col font-sans select-none antialiased">
+
+    <!-- ========================================== -->
+    <!-- INTRO SCREEN -->
+    <!-- ========================================== -->
+    <div id="intro-screen" class="flex-1 flex flex-col justify-center items-center w-full h-full z-50 bg-black absolute inset-0 overflow-hidden">
+        <div class="hero-backdrop absolute inset-0"></div>
+        <div class="absolute inset-0 opacity-45 bg-center bg-cover scale-110" style="background-image: url('https://res.cloudinary.com/dsqi4tm8x/video/upload/2026-03-16-225624743_yirzuc.jpg'); filter: blur(26px);"></div>
+        <div class="noise-overlay absolute inset-0"></div>
+        <div class="vignette absolute inset-0"></div>
+        <div class="orb orb-pink"></div>
+        <div class="orb orb-violet"></div>
+        <div class="orb orb-cyan"></div>
+
+        <div class="relative z-10 flex flex-col items-center px-6">
+            <h1 class="text-4xl font-black text-center mb-12 tracking-widest uppercase bg-gradient-to-r from-pink-400 to-purple-500 bg-clip-text text-transparent drop-shadow-lg" style="font-family: 'Outfit', sans-serif;">
+                Kurumi
+            </h1>
+
+            <button id="start-btn" class="bg-white/10 backdrop-blur-md border border-white/30 text-white font-bold py-4 px-12 rounded-full transition-all duration-300 hover:bg-white/20 uppercase tracking-widest text-sm pulse-btn flex items-center justify-center">
+                <span id="start-btn-text">Sentuh untuk Mula</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MAIN APP SCREEN (IMMERSIVE MODE)           -->
+    <!-- ========================================== -->
+    <div id="app-screen" class="hidden h-full w-full flex flex-col relative bg-black overflow-hidden">
+        <div class="absolute inset-0 noise-overlay"></div>
+        <div class="vignette absolute inset-0"></div>
+        <div class="orb orb-pink"></div>
+        <div class="orb orb-violet"></div>
+
+        <div data-ui-layer="primary" class="absolute top-4 left-4 right-4 z-30 flex items-start justify-between gap-3 pointer-events-none">
+            <div class="hud-pill-clear px-4 py-3 max-w-[240px]">
+                <div class="text-[10px] uppercase tracking-[0.35em] text-white/45">Sambungan</div>
+                <div class="mt-1 flex items-center gap-2 text-sm font-semibold text-white/90">
+                    <span class="hud-dot"></span>
+                    <span id="scene-status">Mod rehat</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-3">
+                <div class="hud-pill-clear px-4 py-3 text-right min-w-[150px]">
+                    <div class="text-[10px] uppercase tracking-[0.35em] text-white/45">Perasaan</div>
+                    <div id="mood-status" class="mt-1 text-sm font-semibold text-white/90">Malu</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW UI: Vertical Affection Tube (Kiri) -->
+        <div data-ui-layer="primary" class="absolute top-20 sm:top-24 left-1 sm:left-2 z-30 pointer-events-none">
+            <div class="ui-card px-4 py-5 flex flex-col items-center gap-3 w-[92px]">
+                <div id="affection-icon" class="text-3xl drop-shadow-[0_0_18px_rgba(255,105,180,0.95)] transition-transform duration-300">🤍</div>
+                <div id="affection-level" class="text-[11px] font-semibold text-white/65 text-center">Pertemuan pertama</div>
+
+                <div id="affection-ui" class="relative w-6 h-52 bg-black/40 border-2 border-pink-300/40 rounded-full overflow-hidden shadow-[0_0_22px_rgba(236,72,153,0.24)] p-0.5 flex flex-col justify-end">
+                    <div id="affection-bar" class="w-full bg-gradient-to-t from-purple-600 via-pink-500 to-pink-300 rounded-full transition-all duration-500 ease-out relative shadow-[0_0_10px_rgba(255,255,255,0.5)_inset]" style="height: 0%">
+                        <div class="absolute top-0 w-full h-1 bg-white/60 rounded-full blur-[1px]"></div>
+                    </div>
+                    <div class="absolute inset-0 w-1/2 h-full glass-reflection rounded-l-full pointer-events-none"></div>
+                </div>
+
+                <div id="affection-score" class="affection-score-clear text-white text-xs font-bold tracking-[0.28em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-3 py-1.5 rounded-full">
+                    0%
+                </div>
+            </div>
+        </div>
+
+        <!-- Video Container -->
+        <div class="flex-1 relative w-full h-full overflow-hidden" id="video-container">
+            <!-- Basic Videos -->
+            <video id="video-idle" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/2026-03-16-225624743_yirzuc.mp4" class="waifu-vid" playsinline webkit-playsinline muted loop preload="auto" crossorigin="anonymous"></video>
+            
+            <video id="video-wave" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/lv_0_20260317195837_jcmssk.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+            <video id="video-action1" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/2026-03-16-205614048_ggyysp.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+            
+            <!-- Angry 1.0 (Untuk Touch) -->
+            <video id="video-action2" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/grok_video_2026-03-16-20-55-47_wybg6b.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+            
+            <!-- Angry 2.0 (Untuk Event/Dialog Salah) -->
+            <video id="video-action3" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/grok_video_2026-03-16-23-08-15_zc17sq.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+
+            <video id="video-cat" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/grok_video_2026-03-16-22-12-44_pcrogl.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+            <video id="video-sweet" src="https://res.cloudinary.com/dsqi4tm8x/video/upload/gemini_generated_video_7d7ed703_1_zabd8g.mp4" class="waifu-vid action-vid" playsinline webkit-playsinline muted preload="auto" crossorigin="anonymous"></video>
+            
+            <!-- ZON SENTUHAN (Hanya untuk TRIGGER MARAH bila disentuh badan) -->
+            <div id="zone-character" class="absolute top-[10%] left-1/2 -translate-x-1/2 w-[70%] h-[80%] z-20 cursor-pointer"></div>
+
+            <!-- QTE ACTION BUTTON (Muncul Rawak) -->
+            <div id="action-btn-wrapper" data-ui-layer="primary" class="absolute inset-0 flex items-center justify-center z-40 hidden pointer-events-none">
+                <div class="qte-panel pointer-events-none max-w-[260px] w-[calc(100%-32px)]">
+                    <div class="text-[11px] uppercase tracking-[0.35em] text-pink-100/70">Aksi Pantas</div>
+                    <button id="qte-action-btn" class="pointer-events-auto w-full rounded-full border border-white/15 bg-white/[0.07] text-white font-extrabold text-base py-4 px-8 uppercase tracking-[0.18em] shadow-[0_14px_36px_rgba(0,0,0,0.34)] action-btn-anim transition-all duration-200 hover:bg-white/[0.12] active:scale-95">
+                        <!-- Text akan diganti menggunakan JS -->
+                    </button>
+                </div>
+            </div>
+
+            <div id="side-event-wrapper" data-ui-layer="primary" class="absolute top-1/2 right-3 -translate-y-1/2 z-40 hidden pointer-events-none">
+                <div class="qte-panel side-event-panel pointer-events-auto">
+                    <div id="side-event-label" class="text-[11px] uppercase tracking-[0.35em] text-pink-100/70">Hadiah Muncul</div>
+                    <p id="side-event-text" class="text-sm leading-6 text-white/85">Kejutan muncul di sebelah kanan.</p>
+
+                    <button id="side-event-btn" class="side-event-button hidden">
+                        Buka
+                    </button>
+
+                    <div id="gift-lane" class="gift-lane hidden">
+                        <div class="gift-target">💗</div>
+                        <div id="gift-drag" class="gift-drag">🍰</div>
+                    </div>
+
+                    <div id="gift-hint" class="hidden text-[11px] uppercase tracking-[0.28em] text-white/55 text-center">
+                        Leret kiri untuk hantar
+                    </div>
+                </div>
+            </div>
+
+            <div id="right-control-dock" class="right-control-dock">
+                <button id="gift-event-btn" class="right-control-btn" type="button" title="Leret hadiah" aria-label="Leret hadiah">
+                    <span class="right-control-icon">🎁</span>
+                </button>
+
+                <button id="headpat-btn" class="right-control-btn" type="button" title="Usap Kepala" aria-label="Usap Kepala">
+                    <span class="right-control-icon">🫳</span>
+                </button>
+
+                <button id="character-btn" class="right-control-btn" type="button" title="Watak" aria-label="Watak" data-link="character.html">
+                    <span class="dock-icon dock-icon--character" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5.2 19.2c1.4-3.2 4.3-5.2 6.8-5.2s5.4 2 6.8 5.2"/>
+                            <circle cx="12" cy="8.2" r="3.5"/>
+                            <path d="M7.4 6.4c.6-2.1 2.5-3.6 4.6-3.6s4 1.5 4.6 3.6"/>
+                        </svg>
+                    </span>
+                </button>
+
+                <button id="story-btn" class="right-control-btn" type="button" title="Cerita" aria-label="Cerita" data-link="story.html">
+                    <span class="dock-icon dock-icon--story" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5.5 5.2h8.2c1.8 0 3.3 1.5 3.3 3.3v10.3H8.8c-1.8 0-3.3-1.5-3.3-3.3V5.2z"/>
+                            <path d="M5.5 5.2v10.3c0 1.8 1.5 3.3 3.3 3.3h8.4"/>
+                            <path d="M9 8.2h6.2"/>
+                            <path d="M9 11.4h6.2"/>
+                        </svg>
+                    </span>
+                </button>
+            </div>
+            
+        </div>
+
+        <!-- STORY PANEL -->
+        <div id="story-overlay" class="story-overlay hidden">
+            <div id="story-panel" class="story-panel">
+                <div class="story-header">
+                    <div>
+                        <div class="story-title">Mod Cerita</div>
+                        <div class="story-subtitle">Pilih bab untuk diteruskan.</div>
+                    </div>
+                    <button id="story-close-btn" class="story-close-btn" type="button" aria-label="Tutup panel cerita">
+                        ✕
+                    </button>
+                </div>
+
+                <div class="story-chapters">
+                    <button id="chapter-1-btn" class="story-chapter-btn is-available" type="button" data-link="chapter1.html">
+                        <div class="chapter-meta">
+                            <span class="chapter-badge">Bab 1</span>
+                            <span class="chapter-title">Permulaan</span>
+                            <span class="chapter-desc">Bertemu Kurumi buat kali pertama.</span>
+                        </div>
+                        <span class="chapter-action">Mula</span>
+                    </button>
+
+                    <button id="chapter-2-btn" class="story-chapter-btn is-locked" type="button" data-link="chapter2.html" disabled>
+                        <div class="chapter-meta">
+                            <span class="chapter-badge">Bab 2</span>
+                            <span class="chapter-title">Rahsia</span>
+                            <span class="chapter-desc">Dikunci sehingga Bab 1 dibuka.</span>
+                        </div>
+                        <span class="chapter-lock">🔒 Terkunci</span>
+                    </button>
+                </div>
+
+                <div id="story-lock-hint" class="story-hint">Selesaikan Bab 1 untuk membuka Bab 2.</div>
+            </div>
+        </div>
+
+        <!-- DIALOGUE & CHOICES UI -->
+        <div data-ui-layer="primary" class="absolute bottom-5 left-4 right-4 z-30 flex flex-col gap-4 pointer-events-none">
+            
+            <!-- Choices Container -->
+            <div id="choices-container" class="w-full max-w-md mx-auto flex flex-col gap-3 hidden pointer-events-auto">
+                <button id="choice-1" class="choice-btn w-full bg-black/70 border border-white/20 rounded-[24px] py-4 pl-6 pr-12 text-left text-white text-[15px] font-bold tracking-wide hover:bg-white/20 active:scale-95 transition-all shadow-lg">
+                    Pilihan 1
+                </button>
+                <button id="choice-2" class="choice-btn w-full bg-black/70 border border-white/20 rounded-[24px] py-4 pl-6 pr-12 text-left text-white text-[15px] font-bold tracking-wide hover:bg-white/20 active:scale-95 transition-all shadow-lg">
+                    Pilihan 2
+                </button>
+            </div>
+
+            <!-- Dialogue Box (Transparent Black 60%) -->
+            <div id="dialogue-container" class="dialogue-frame w-full max-w-xl mx-auto bg-black/55 rounded-[28px] p-6 md:p-8 relative shadow-2xl border border-white/10 opacity-0 pointer-events-auto overflow-hidden">
+                <div class="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-pink-400/[0.05]"></div>
+                <div class="relative flex items-start justify-center mb-4">
+                    <div>
+                        <div class="inline-flex items-center gap-2 bg-white text-black px-4 py-1.5 rounded-full text-xs font-black tracking-[0.3em] uppercase shadow-md">
+                            <span class="w-2 h-2 rounded-full bg-pink-500"></span>
+                            Kurumi
+                        </div>
+                    </div>
+                </div>
+                <p id="dialogue-text" class="relative text-white text-[16px] md:text-lg leading-relaxed min-h-[92px] font-medium tracking-wide pr-2">
+                    ...
+                </p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const introScreen = document.getElementById('intro-screen');
+        const appScreen = document.getElementById('app-screen');
+        const startBtn = document.getElementById('start-btn');
+        const startBtnText = document.getElementById('start-btn-text');
+        
+        const zoneCharacter = document.getElementById('zone-character');
+        
+        // Video Elements
+        const vidIdle = document.getElementById('video-idle');
+        const vidWave = document.getElementById('video-wave'); 
+        const vidAction1 = document.getElementById('video-action1'); // Headpat
+        const vidAction2 = document.getElementById('video-action2'); // Angry 1.0 (Body Touch Only)
+        const vidAction3 = document.getElementById('video-action3'); // Angry 2.0 (Dialog/Event Fail)
+        const vidCat = document.getElementById('video-cat'); // Cat Reaction
+        const vidSweet = document.getElementById('video-sweet'); // Sweet Reaction
+
+        // UI Elements
+        const dialogueContainer = document.getElementById('dialogue-container');
+        const dialogueText = document.getElementById('dialogue-text');
+        
+        const choicesContainer = document.getElementById('choices-container');
+        const choice1Btn = document.getElementById('choice-1');
+        const choice2Btn = document.getElementById('choice-2');
+        
+        const actionBtnWrapper = document.getElementById('action-btn-wrapper');
+        const qteActionBtn = document.getElementById('qte-action-btn');
+        const sideEventWrapper = document.getElementById('side-event-wrapper');
+        const sideEventLabel = document.getElementById('side-event-label');
+        const sideEventText = document.getElementById('side-event-text');
+        const sideEventBtn = document.getElementById('side-event-btn');
+        const giftLane = document.getElementById('gift-lane');
+        const giftDrag = document.getElementById('gift-drag');
+        const giftHint = document.getElementById('gift-hint');
+        const giftEventBtn = document.getElementById('gift-event-btn');
+        const headpatBtn = document.getElementById('headpat-btn');
+        const characterBtn = document.getElementById('character-btn');
+        const storyBtn = document.getElementById('story-btn');
+        const storyOverlay = document.getElementById('story-overlay');
+        const storyPanel = document.getElementById('story-panel');
+        const storyCloseBtn = document.getElementById('story-close-btn');
+        const chapter1Btn = document.getElementById('chapter-1-btn');
+        const chapter2Btn = document.getElementById('chapter-2-btn');
+        const storyLockHint = document.getElementById('story-lock-hint');
+        const feedBtn = document.getElementById('feed-btn');
+        const feedBtnIcon = document.getElementById('feed-btn-icon');
+        
+        const affectionUi = document.getElementById('affection-ui');
+        const affectionIcon = document.getElementById('affection-icon');
+        const affectionScore = document.getElementById('affection-score');
+        const affectionBar = document.getElementById('affection-bar');
+        const affectionLevel = document.getElementById('affection-level');
+        const sceneStatus = document.getElementById('scene-status');
+        const moodStatus = document.getElementById('mood-status');
+        const dialogueMicroStatus = document.getElementById('dialogue-micro-status');
+
+        let isPlayingAction = false;
+        let isEventActive = false; 
+        let typeInterval = null;
+        let idleTimer = null;
+        let hideDialogueTimer = null;
+        let qteTimer = null;
+        let sideEventTimer = null;
+        let appStarted = false;
+        let activeSideEvent = null;
+        let isGiftDragging = false;
+        let giftDragStartX = 0;
+        let activeGiftOffset = 0;
+        let hungerLevel = 18;
+        let boredomLevel = 12;
+        let moodBoostTicks = 0;
+        const affectionGainScale = 0.72;
+        const storageKeys = {
+            affection: 'kurumi_affection_memory_v1',
+            mood: 'kurumi_mood_memory_v1',
+            storyChapter2: 'kurumi_story_chapter2_unlocked_v1'
+        };
+
+        let currentAffection = 0;
+        const maxAffection = 100;
+        const maxAffectionPalette = [
+            { emoji: '❤️', color: '#ff5fa2' },
+            { emoji: '💖', color: '#ff77c8' },
+            { emoji: '💜', color: '#b794ff' },
+            { emoji: '💙', color: '#60a5fa' },
+            { emoji: '💚', color: '#4ade80' },
+            { emoji: '💛', color: '#facc15' },
+            { emoji: '🩷', color: '#f9a8d4' },
+            { emoji: '💞', color: '#fb7185' },
+            { emoji: '✨', color: '#fef08a' }
+        ];
+
+        const sideEvents = [
+            {
+                type: 'gift',
+                label: 'Hadiah Muncul',
+                prompt: "Isyarat hadiah bercahaya muncul di kanan. Kurumi nampak tergoda dengan sesuatu yang manis... hantar sebelum detik berlalu.",
+                panelText: 'Leret kek kepadanya sebelum dia hilang minat.',
+                hint: 'Leret kek kepada Kurumi',
+                btnText: '🍰 Hantar kek',
+                giftEmoji: '🍰',
+                giftBg: 'linear-gradient(135deg, rgba(255, 239, 213, 0.98), rgba(251, 146, 60, 0.92))',
+                actionVid: null,
+                successReply: 'Kek untuk aku? Itu comel sangat... sekarang aku nak tinggal dengan awak lebih lama.',
+                failReply: 'Awak dah sedia kek tapi masih buat aku tunggu...? Hmph, mood aku rosak.',
+                failVid: vidAction3,
+                needEffect: { hungerDelta: -36, boredomDelta: -8, setBoost: 3 },
+                failNeedEffect: { hungerDelta: 10, boredomDelta: 10, setBoost: 0 },
+                restoresHunger: true,
+                affChange: 9,
+                failAffChange: -6,
+                timeout: 7600
+            },
+            {
+                type: 'gift',
+                label: 'Hadiah Muncul',
+                prompt: "Ikon jambak bunga berkelip di sebelah kanan. Dia pura-pura tak nampak... tapi dia memang nampak.",
+                panelText: 'Leret bunga kepadanya sebelum cahayanya pudar.',
+                hint: 'Leret bunga kepada Kurumi',
+                btnText: '🌸 Hantar bunga',
+                giftEmoji: '🌸',
+                giftBg: 'linear-gradient(135deg, rgba(249, 168, 212, 0.98), rgba(192, 132, 252, 0.92))',
+                actionVid: null,
+                successReply: 'Bunga...? Awak pandai buat seorang gadis rasa istimewa. Aku suka sisi awak ni.',
+                failReply: 'Aku nampak bunga sekejap... lepas tu hilang. Itu lebih mengecewakan daripada tak nampak langsung.',
+                failVid: vidAction3,
+                needEffect: { boredomDelta: -18, setBoost: 2 },
+                failNeedEffect: { boredomDelta: 10, setBoost: 0 },
+                affChange: 8,
+                failAffChange: -5,
+                timeout: 7600
+            },
+            {
+                type: 'gift',
+                label: 'Hadiah Muncul',
+                prompt: "Isyarat minuman lewat malam menyala di kanan. Mungkin dia nak sedikit manisan sambil meluangkan masa dengan awak.",
+                panelText: 'Leret boba sebelum dia merajuk.',
+                hint: 'Leret boba kepada Kurumi',
+                btnText: '🧋 Hantar boba',
+                giftEmoji: '🧋',
+                giftBg: 'linear-gradient(135deg, rgba(125, 211, 252, 0.98), rgba(96, 165, 250, 0.92))',
+                actionVid: null,
+                successReply: 'Boba juga? Hehe... okay, ini rasmi jadi temu janji.',
+                failReply: 'Awak hampir beri aku minuman tapi ubah fikiran... kurang ajar.',
+                failVid: vidAction3,
+                needEffect: { hungerDelta: -28, boredomDelta: -10, setBoost: 3 },
+                failNeedEffect: { hungerDelta: 8, boredomDelta: 10, setBoost: 0 },
+                restoresHunger: true,
+                affChange: 7,
+                failAffChange: -4,
+                timeout: 7600
+            },
+            {
+                type: 'sideTap',
+                label: 'Mesej peribadi',
+                prompt: "Gelembung mesej kecil muncul di kanan. Nampaknya Kurumi hantar sesuatu hanya untuk awak.",
+                panelText: 'Buka mesej rahsianya sebelum ia hilang.',
+                btnText: '📩 Buka mesej',
+                actionVid: null,
+                successReply: 'Mesej aku ringkas saja... aku cuma nak beritahu aku rindu perhatian awak.',
+                failReply: 'Awak abaikan mesej peribadi aku? Itu sepatutnya jadi detik comel.',
+                failVid: vidAction3,
+                needEffect: { boredomDelta: -16, setBoost: 1 },
+                failNeedEffect: { boredomDelta: 12, setBoost: 0 },
+                affChange: 7,
+                failAffChange: -4,
+                burstEmoji: '💌',
+                timeout: 7600
+            },
+            {
+                type: 'sideTap',
+                label: 'Panggilan mini',
+                prompt: "Permintaan panggilan berkelip di kanan. Jika awak jawab cepat, mungkin dia akan cakap sesuatu yang manis.",
+                panelText: 'Jawab panggilan cepat sebelum dia tutup.',
+                btnText: '📞 Jawab panggilan',
+                actionVid: null,
+                successReply: 'Aku telefon sekejap saja sebab aku nak dengar awak pilih aku segera.',
+                failReply: 'Terlalu lambat. Aku dah letak... lain kali cepat sikit.',
+                failVid: vidAction3,
+                needEffect: { boredomDelta: -18, setBoost: 2 },
+                failNeedEffect: { boredomDelta: 12, setBoost: 0 },
+                affChange: 8,
+                failAffChange: -5,
+                burstEmoji: '📞',
+                timeout: 7600
+            },
+            {
+                type: 'sideTap',
+                label: 'Isyarat lembut',
+                prompt: "Isyarat kejutan kecil berkembang di kanan. Ini salah satu detik kecil di mana pujian boleh mengubah segalanya.",
+                panelText: 'Ambil peluang ini dan beri dia pujian ringkas.',
+                btnText: '✨ Puji dia',
+                actionVid: null,
+                successReply: 'Awak selalu pilih masa yang betul untuk cakap sesuatu yang bahaya untuk hati aku.',
+                failReply: 'Awak ada peluang terbaik untuk memuji aku tapi bazirkan. Hebat.',
+                failVid: vidAction3,
+                needEffect: { boredomDelta: -14, setBoost: 1 },
+                failNeedEffect: { boredomDelta: 10, setBoost: 0 },
+                affChange: 6,
+                failAffChange: -4,
+                burstEmoji: '✨',
+                timeout: 7600
+            }
+        ];
+
+        function pickRandom(items) {
+            return items[Math.floor(Math.random() * items.length)];
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(max, Math.max(min, value));
+        }
+
+        function readStorage(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                return raw === null ? fallback : raw;
+            } catch (error) {
+                return fallback;
+            }
+        }
+
+        function writeStorage(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch (error) {
+                // ignore storage failures
+            }
+        }
+
+        function openStoryPanel() {
+            if (!storyOverlay) return;
+            syncStoryChapters();
+            storyOverlay.classList.remove('hidden');
+            requestAnimationFrame(() => storyOverlay.classList.add('show'));
+        }
+
+        function closeStoryPanel() {
+            if (!storyOverlay) return;
+            storyOverlay.classList.remove('show');
+            setTimeout(() => storyOverlay.classList.add('hidden'), 180);
+        }
+
+        function syncStoryChapters() {
+            if (!chapter2Btn) return;
+            const unlocked = readStorage(storageKeys.storyChapter2, 'false') === 'true';
+            chapter2Btn.disabled = !unlocked;
+            chapter2Btn.classList.toggle('is-locked', !unlocked);
+            chapter2Btn.classList.toggle('is-available', unlocked);
+
+            if (unlocked) {
+                const desc = chapter2Btn.querySelector('.chapter-desc');
+                if (desc) desc.innerText = 'Bab 2 kini boleh dimainkan.';
+                chapter2Btn.querySelector('.chapter-lock')?.remove();
+                if (!chapter2Btn.querySelector('.chapter-action')) {
+                    const action = document.createElement('span');
+                    action.className = 'chapter-action';
+                    action.innerText = 'Mula';
+                    chapter2Btn.appendChild(action);
+                }
+                if (storyLockHint) storyLockHint.innerText = 'Bab 2 sudah dibuka.';
+            } else {
+                const desc = chapter2Btn.querySelector('.chapter-desc');
+                if (desc) desc.innerText = 'Dikunci sehingga Bab 1 dibuka.';
+                chapter2Btn.querySelector('.chapter-action')?.remove();
+                if (!chapter2Btn.querySelector('.chapter-lock')) {
+                    const lock = document.createElement('span');
+                    lock.className = 'chapter-lock';
+                    lock.innerText = '🔒 Terkunci';
+                    chapter2Btn.appendChild(lock);
+                }
+                if (storyLockHint) storyLockHint.innerText = 'Selesaikan Bab 1 untuk membuka Bab 2.';
+            }
+        }
+
+        function unlockChapter2() {
+            writeStorage(storageKeys.storyChapter2, 'true');
+            syncStoryChapters();
+        }
+
+        function navigateToLink(element) {
+            if (!element) return;
+            const link = element.getAttribute('data-link');
+            if (link) window.location.href = link;
+        }
+
+        function saveAffectionMemory() {
+            writeStorage(storageKeys.affection, String(currentAffection));
+        }
+
+        function saveMoodMemory() {
+            writeStorage(storageKeys.mood, JSON.stringify({
+                hungerLevel,
+                boredomLevel,
+                moodBoostTicks
+            }));
+        }
+
+        function loadLocalMemory() {
+            const storedAffection = Number(readStorage(storageKeys.affection, '0'));
+            if (Number.isFinite(storedAffection)) {
+                currentAffection = Math.min(maxAffection, Math.max(0, Math.round(storedAffection)));
+            }
+
+            try {
+                const storedMood = JSON.parse(readStorage(storageKeys.mood, '{}'));
+                if (storedMood && typeof storedMood === 'object') {
+                    if (Number.isFinite(Number(storedMood.hungerLevel))) hungerLevel = clamp(Number(storedMood.hungerLevel), 0, 100);
+                    if (Number.isFinite(Number(storedMood.boredomLevel))) boredomLevel = clamp(Number(storedMood.boredomLevel), 0, 100);
+                    if (Number.isFinite(Number(storedMood.moodBoostTicks))) moodBoostTicks = clamp(Number(storedMood.moodBoostTicks), 0, 4);
+                }
+            } catch (error) {
+                hungerLevel = 18;
+                boredomLevel = 12;
+                moodBoostTicks = 0;
+            }
+        }
+
+        function normalizeAffectionChange(amount) {
+            if (amount > 0) {
+                return clamp(Math.round(amount * 0.4), 5, 10);
+            }
+
+            if (amount < 0) {
+                return -clamp(Math.round(Math.abs(amount) * 0.28), 1, 5);
+            }
+
+            return 0;
+        }
+
+        function getMoodProfile() {
+            if (hungerLevel >= 70) {
+                return { label: 'Lapar', detail: hungerLevel >= 86 ? 'Perlu snek sekarang' : 'Mahu sesuatu yang manis' };
+            }
+
+            if (boredomLevel >= 70) {
+                return { label: 'Bosan', detail: 'Perlukan perhatian awak' };
+            }
+
+            if (moodBoostTicks > 0) {
+                return { label: 'Gembira', detail: 'Rasa dimanjakan dan selesa' };
+            }
+
+            if (currentAffection >= 80) return { label: 'Jatuh hati teruk', detail: 'Sangat melekat dengan awak' };
+            if (currentAffection >= 60) return { label: 'Menggoda', detail: 'Nikmati setiap detik kecil' };
+            if (currentAffection >= 40) return { label: 'Mesra', detail: 'Rasa dekat dan tenang' };
+            if (currentAffection >= 20) return { label: 'Ingin tahu', detail: 'Perlahan-lahan condong kepada awak' };
+            if (currentAffection > 0) return { label: 'Berhati-hati', detail: 'Masih membiasakan diri dengan awak' };
+            return { label: 'Malu', detail: 'Diam-diam memerhati awak' };
+        }
+
+        function updateFeedButtonUi() {
+            if (!feedBtn || !feedBtnIcon) return;
+
+            const hungryNow = hungerLevel >= 52;
+            feedBtn.classList.toggle('is-alert', hungryNow);
+            feedBtn.classList.toggle('is-muted', !hungryNow);
+            feedBtnIcon.innerText = hungryNow ? '🍰' : '🍽️';
+            feedBtn.title = hungryNow ? 'Suap dia' : 'Tawarkan snek';
+            feedBtn.setAttribute('aria-label', hungryNow ? 'Suap dia' : 'Tawarkan snek');
+        }
+
+        function updateMoodNeeds({ hungerDelta = 0, boredomDelta = 0, boostDelta = 0, setBoost = null, refresh = true } = {}) {
+            hungerLevel = clamp(hungerLevel + hungerDelta, 0, 100);
+            boredomLevel = clamp(boredomLevel + boredomDelta, 0, 100);
+
+            if (setBoost !== null) moodBoostTicks = clamp(setBoost, 0, 4);
+            else moodBoostTicks = clamp(moodBoostTicks + boostDelta, 0, 4);
+
+            saveMoodMemory();
+            if (refresh) refreshAffectionUi();
+        }
+
+        function tickMoodNeeds() {
+            updateMoodNeeds({ hungerDelta: 5, boredomDelta: 4, boostDelta: moodBoostTicks > 0 ? -1 : 0 });
+        }
+
+        function canUseManualControls() {
+            return appStarted && !isPlayingAction && !isEventActive;
+        }
+
+        function triggerManualHeadPat() {
+            if (!canUseManualControls()) return;
+            const rect = headpatBtn.getBoundingClientRect();
+            setSceneStatus('Aksi manual', 'Usap kepala');
+            spawnHeart(rect.left + rect.width / 2, rect.top + 8, { emoji: '💗', size: 24, duration: 1200 });
+            updateMoodNeeds({ boredomDelta: -14, hungerDelta: 2, boostDelta: 1, refresh: true });
+            updateAffection(9);
+            triggerAction(vidAction1, 'Hehe... usapan kepala daripada awak memang lembut. Boleh buat lagi nanti.');
+        }
+
+        function triggerManualFeed() {
+            if (!canUseManualControls()) return;
+            if (!feedBtn) return;
+
+            const rect = feedBtn.getBoundingClientRect();
+            const hungryNow = hungerLevel >= 52;
+
+            if (!hungryNow) {
+                setSceneStatus('Tawaran snek', 'Belum lapar');
+                spawnHeart(rect.left + rect.width / 2, rect.top + 10, { emoji: '✨', color: '#fde68a', size: 22, duration: 1100 });
+                updateMoodNeeds({ boredomDelta: -4, boostDelta: 1, refresh: true });
+                typeWriter("Aku okay buat masa ini... tapi comel bila awak sedia nak suap aku.");
+                return;
+            }
+
+            const snack = pickRandom([
+                { emoji: '🍰', reply: 'Mm... terima kasih. Snek manis itu memang membantu. Aku rasa lebih baik sekarang.' },
+                { emoji: '🧋', reply: 'Minuman juga? Hehe... okay, mood aku memang lebih baik sekarang.' },
+                { emoji: '🍓', reply: 'Awak perasan aku lapar sebelum aku sempat merungut betul-betul... hebat.' }
+            ]);
+
+            setSceneStatus('Masa snek', 'Perasaan pulih');
+            spawnHeart(rect.left + rect.width / 2, rect.top + 10, { emoji: snack.emoji, size: 28, duration: 1250 });
+            spawnHeart(rect.left + rect.width / 2 + 12, rect.top - 10, { emoji: '💖', color: '#ff77c8', size: 20, duration: 1450, extraClass: 'rainbow-heart' });
+            updateMoodNeeds({ hungerDelta: -40, boredomDelta: -10, setBoost: 3, refresh: true });
+            updateAffection(10);
+            typeWriter(snack.reply);
+        }
+
+        function triggerManualGiftEvent() {
+            if (!canUseManualControls()) return;
+            if (isEventActive) return;
+            const giftEvents = sideEvents.filter((evt) => evt.type === 'gift');
+            if (!giftEvents.length) return;
+            const eventData = pickRandom(giftEvents);
+            isEventActive = true;
+            showGiftEvent(eventData);
+        }
+
+        function setSceneStatus(text, microText = '') {
+            if (sceneStatus) sceneStatus.innerText = text;
+            if (microText && dialogueMicroStatus) dialogueMicroStatus.innerText = microText;
+        }
+
+        function setViewportHeight() {
+            const height = window.innerHeight;
+            document.documentElement.style.setProperty('--vh', `${height * 0.01}px`);
+        }
+
+        function refreshAffectionUi(animate = false) {
+            affectionScore.innerText = currentAffection + "%";
+            affectionBar.style.height = (currentAffection / maxAffection * 100) + "%";
+
+            let level = 'Pertemuan pertama';
+            let icon = '🤍';
+
+            if (currentAffection >= 80) {
+                level = 'Tahap jiwa sejiwa';
+                icon = '💞';
+            } else if (currentAffection >= 60) {
+                level = 'Sangat rapat';
+                icon = '💕';
+            } else if (currentAffection >= 40) {
+                level = 'Zon selesa';
+                icon = '💖';
+            } else if (currentAffection >= 20) {
+                level = 'Semakin rapat';
+                icon = '💓';
+            } else if (currentAffection > 0) {
+                level = 'Mencairkan suasana';
+                icon = '🩷';
+            }
+
+            const moodProfile = getMoodProfile();
+
+            if (moodStatus) moodStatus.innerText = moodProfile.label;
+            affectionLevel.innerText = level;
+            affectionIcon.innerText = icon;
+            updateFeedButtonUi();
+
+            if (animate) {
+                affectionUi.classList.add('pop-anim');
+                affectionIcon.classList.add('scale-125');
+                setTimeout(() => {
+                    affectionUi.classList.remove('pop-anim');
+                    affectionIcon.classList.remove('scale-125');
+                }, 300);
+            }
+        }
+
+        // --- DATA DIALOG KOSONG ---
+        const idleDialogues = [
+            "Kadang-kadang aku tertanya, dunia kecil ini hanya bergerak bila awak datang. Sebelum awak muncul, semuanya sunyi... tiba-tiba terasa hangat.",
+            "Kalau kita ada seluruh malam untuk kita, aku nak berjalan perlahan dengan awak di tempat yang tenang, supaya aku boleh bercerita sepuasnya dan awak tak jemu mendengar.",
+            "Awak tahu... walaupun awak tak berkata apa-apa, aku tetap rasa awak ada di sini bersama aku. Pelik, tapi menenangkan.",
+            "Aku selalu bayangkan detik kecil yang comel, macam kongsi pencuci mulut, tengok langit berubah warna, dan pura-pura malam lebih panjang daripada biasa.",
+            "Bila semuanya sunyi macam ni, aku mula perasan perkara kecil... perhatian awak, diam awak, dan betapa gembiranya aku bila awak tinggal lebih lama.",
+            "Mungkin suatu hari nanti kita tak perlukan detik dramatik pun. Mungkin sekadar berbual begini, semakin rapat setiap kali, sudah cukup untuk aku."
+        ];
+
+        // --- DATA KEJADIAN RAWAK ---
+        const randomEvents = [
+            {
+                type: 'choice',
+                prompt: "Awak asyik memandang aku... Ada sesuatu di muka aku ke?",
+                choices: [
+                    { text: "Awak nampak sangat comel hari ini.", actionVid: null, reply: "Eh?! J-jangan cakap macam tu tiba-tiba...", affChange: 5 },
+                    { text: "Ya, awak nampak pelik sikit.", actionVid: vidAction3, reply: "Hei?! Kurang ajar betul!", affChange: -5 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Hey... esok kita buat apa? Aku harap kita boleh luang lebih masa bersama.",
+                choices: [
+                    { text: "Jadi temu janji. Aku bawa awak ke tempat yang cantik.", actionVid: null, reply: "Betul?! Aku tak sabar! Yay!", affChange: 10 },
+                    { text: "Aku sibuk esok. Mungkin lain kali.", actionVid: vidAction3, reply: "Oh... baiklah. Awak memang selalu sibuk pun...", affChange: -5 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Kalau aku minta apa saja di dunia sekarang, apa yang awak akan belikan?",
+                choices: [
+                    { text: "Apa saja yang awak mahu, puteri.", actionVid: null, reply: "Hehe, awak terbaik! Tapi jujurnya, bersama awak saja sudah cukup.", affChange: 10 },
+                    { text: "Tak ada apa-apa, aku tengah kering.", actionVid: vidAction3, reply: "Wah, romantik sungguh... Tak!", affChange: -5 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Cakap jujur... awak pernah bosan berbual dengan aku?",
+                choices: [
+                    { text: "Tak pernah. Aku suka dengar suara awak.", actionVid: null, reply: "Syukurlah... aku pun suka berbual dengan awak.", affChange: 11 },
+                    { text: "Kadang-kadang, ya. Awak banyak cakap.", actionVid: vidAction3, reply: "Hmph! Baiklah, aku diam saja!", affChange: -6 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Oh! Tengok sana! Anak kucing lalu! 🐱",
+                choices: [
+                    { text: "Jom kita belaikan kucing itu!", actionVid: vidCat, reply: "Aww, comel dan lembutnya! Aku suka kucing sangat!", affChange: 12 },
+                    { text: "Abaikan kucing itu.", actionVid: vidAction3, reply: "Ehh? Awak tak suka kucing? Bosannya...", affChange: -6 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Hey... aku rasa sedikit lapar. Ada sesuatu yang manis? 🍰",
+                choices: [
+                    { text: "Beri dia sepotong kek.", actionVid: null, reply: "Wow, terima kasih! Awak paling manis!", affChange: 10 },
+                    { text: "Suruh dia minum air saja.", actionVid: vidAction3, reply: "Ehh?! Awak kadang-kadang kejam!", affChange: -6 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Matahari terbenam semakin cantik... kalau ini temu janji sebenar, awak akan tinggal dan menonton dengan aku sampai langit gelap?",
+                choices: [
+                    { text: "Aku akan tinggal dengan awak sampai cahaya terakhir hilang.", actionVid: null, reply: "Kalau begitu aku rasa aku akan ingat malam ini lama... mungkin selamanya.", affChange: 9 },
+                    { text: "Aku mungkin balik sebelum terlalu lewat.", actionVid: vidAction3, reply: "Oh... awak memang pandai rosakkan mood kadang-kadang.", affChange: -4 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Katakan tiba-tiba hujan dan kita cuma ada satu payung. Apa awak buat?",
+                choices: [
+                    { text: "Tarik awak rapat dan kongsi payung.", actionVid: null, reply: "T-Tunggu... itu terlalu romantik. Tapi... aku suka.", affChange: 7 },
+                    { text: "Lari dulu dan selamatkan diri.", actionVid: vidAction3, reply: "Serius?! Jadi aku kena tinggal di bawah hujan?!", affChange: -3 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Aku jumpa kotak muzik kecil dalam imaginasi... Kalau aku beri pada awak, awak akan simpan sesuatu yang sentimental?",
+                choices: [
+                    { text: "Aku akan hargai sebab ia daripada awak.", actionVid: null, reply: "Hehe... kalau begitu aku akan terus beri awak kenangan kecil macam itu.", affChange: 11 },
+                    { text: "Mungkin aku hilangkan dalam sehari.", actionVid: vidAction3, reply: "Hmph. Baiklah, mungkin awak tak layak dapat benda comel daripada aku.", affChange: -4 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Jujur ya... kalau aku mengantuk dan bersandar di bahu awak semasa perjalanan jauh, awak akan alih diri?",
+                choices: [
+                    { text: "Tak. Aku akan duduk diam supaya awak boleh rehat.", actionVid: null, reply: "Itu kedengaran lembut sangat... aku mungkin jatuh hati lebih teruk.", affChange: 10 },
+                    { text: "Ya, sebab itu tak selesa.", actionVid: vidAction3, reply: "Wow... ingatkan aku jangan percaya bahu awak lagi.", affChange: -5 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Andaikan aku tiba-tiba kecil hati dan diam. Apa yang awak buat dulu?",
+                choices: [
+                    { text: "Tinggal dengan awak dan tanya perlahan apa yang tak kena.", actionVid: null, reply: "...Itu memang membantu. Cuma aku mungkin berlagak degil.", affChange: 9 },
+                    { text: "Biarkan awak sendiri sampai tenang.", actionVid: vidAction3, reply: "Mungkin itu logik... tapi aku tetap rasa sunyi.", affChange: -5 }
+                ]
+            },
+            {
+                type: 'choice',
+                prompt: "Bayangkan malam sudah lewat dan aku tiba-tiba mesej, 'Aku tak boleh tidur.' Apa jawapan awak?",
+                choices: [
+                    { text: "Aku akan berjaga dan temankan awak.", actionVid: null, reply: "Itu buat aku gembira sangat... mungkin aku tak mahu chat tamat.", affChange: 12 },
+                    { text: "Aku akan suruh awak selesaikan sendiri.", actionVid: vidAction3, reply: "Ehh... dingin. Memang dingin.", affChange: -7 }
+                ]
+            },
+            {
+                type: 'action',
+                prompt: "Dia nampak mahu sedikit perhatian...",
+                btnText: "🖐️ Usap kepala",
+                actionVid: vidAction1, 
+                successReply: "Hehe... sedap rasanya. Terima kasih.", 
+                failReply: "Hmph. Aku ingat awak nak usap aku...",
+                failVid: vidAction3, 
+                affChange: 10,
+                timeout: 8200
+            },
+            {
+                type: 'action',
+                prompt: "Dia memandang awak dengan penuh kasih...",
+                btnText: "💖 Senyum balik",
+                actionVid: vidSweet, 
+                successReply: "Hehe... senyuman awak selalu hangat.", 
+                failReply: "Awak abaikan aku lagi...?",
+                failVid: vidAction3, 
+                affChange: 5,
+                timeout: 9000
+            },
+            {
+                type: 'action',
+                prompt: "Dia perlahan-lahan menghulur tangan, menunggu jawapan awak...",
+                btnText: "🤝 Pegang tangan",
+                actionVid: vidSweet,
+                successReply: "Ah... tangan awak hangat. Jangan lepaskan cepat sangat, ya?",
+                failReply: "Aku cuma minta sekejap... tapi awak terlepas juga.",
+                failVid: vidAction3,
+                affChange: 2,
+                timeout: 8600
+            },
+            {
+                type: 'action',
+                prompt: "Kurumi mendekat sedikit, menunggu perhatian penuh awak.",
+                btnText: "✨ Fokus pada dia",
+                actionVid: vidSweet,
+                successReply: "Bagus... aku suka bila mata awak kekal pada aku macam tu.",
+                failReply: "Hmph. Aku tahu awak terganggu.",
+                failVid: vidAction3,
+                affChange: 8,
+                timeout: 7800
+            }
+        ];
+
+        // --- SISTEM GAMIFIKASI ---
+        function updateAffection(amount) {
+            const previousAffection = currentAffection;
+            amount = normalizeAffectionChange(amount);
+            currentAffection += amount;
+            if (currentAffection < 0) currentAffection = 0;
+            if (currentAffection > maxAffection) currentAffection = maxAffection;
+            saveAffectionMemory();
+
+            refreshAffectionUi(true);
+
+            if (previousAffection < maxAffection && currentAffection === maxAffection) {
+                celebrateMaxAffection();
+            }
+        }
+
+        function playResponse(actionVidElement, speechText) {
+            if (actionVidElement) {
+                triggerAction(actionVidElement, speechText);
+                return;
+            }
+
+            if (speechText) typeWriter(speechText);
+            setSceneStatus('Sembang rehat', 'Perbualan lembut');
+            startIdleTimer();
+        }
+
+        function getChoiceMoodImpact(choiceData) {
+            const signature = `${choiceData.text} ${choiceData.reply}`.toLowerCase();
+            let hungerDelta = 0;
+            let boredomDelta = choiceData.affChange > 0 ? -10 : 8;
+            let setBoost = choiceData.affChange > 0 ? 1 : 0;
+
+            if (signature.includes('cake') || signature.includes('kek') || signature.includes('sweet') || signature.includes('manis') || signature.includes('drink') || signature.includes('minum') || signature.includes('minuman') || signature.includes('boba') || signature.includes('hungry') || signature.includes('lapar')) {
+                hungerDelta += choiceData.affChange > 0 ? -30 : 12;
+                boredomDelta += choiceData.affChange > 0 ? -4 : 4;
+                setBoost = choiceData.affChange > 0 ? 3 : 0;
+            }
+
+            if (signature.includes('cat') || signature.includes('kucing')) {
+                boredomDelta += choiceData.affChange > 0 ? -8 : 6;
+            }
+
+            if (signature.includes('talk') || signature.includes('bual') || signature.includes('berbual') || signature.includes('company') || signature.includes('teman') || signature.includes('stay') || signature.includes('tinggal') || signature.includes('date') || signature.includes('temu janji')) {
+                boredomDelta += choiceData.affChange > 0 ? -6 : 4;
+            }
+
+            return { hungerDelta, boredomDelta, setBoost };
+        }
+
+        function getActionMoodImpact(success) {
+            return success
+                ? { boredomDelta: -12, hungerDelta: 2, boostDelta: 1 }
+                : { boredomDelta: 10, hungerDelta: 4, setBoost: 0 };
+        }
+
+        function getPriorityMoodEvent() {
+            if (hungerLevel >= 70) {
+                const hungerEvents = sideEvents.filter((event) => event.restoresHunger);
+                if (hungerEvents.length && Math.random() < 0.82) return pickRandom(hungerEvents);
+            }
+
+            if (boredomLevel >= 70) {
+                const attentionPool = [
+                    ...randomEvents.filter((event) => event.type === 'action'),
+                    ...sideEvents.filter((event) => event.type === 'sideTap')
+                ];
+                if (attentionPool.length && Math.random() < 0.72) return pickRandom(attentionPool);
+            }
+
+            return null;
+        }
+
+        function spawnHeart(x, y, options = {}) {
+            const {
+                emoji = '❤️',
+                color = '',
+                size = 24,
+                duration = 1500,
+                extraClass = ''
+            } = options;
+
+            const heart = document.createElement('div');
+            heart.innerText = emoji;
+            heart.className = `floating-heart ${extraClass}`.trim();
+            heart.style.left = (x - 15) + 'px';
+            heart.style.top = (y - 15) + 'px';
+            heart.style.fontSize = `${size}px`;
+            heart.style.animationDuration = `${duration}ms`;
+            if (color) {
+                heart.style.color = color;
+                heart.style.setProperty('--heart-color', color);
+            }
+            heart.style.setProperty('--heart-duration', `${duration}ms`);
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), duration);
+        }
+
+        function spawnAngry(x, y) {
+            const mark = document.createElement('div');
+            mark.innerText = '💢'; 
+            mark.className = 'floating-heart';
+            mark.style.left = (x - 15) + 'px';
+            mark.style.top = (y - 15) + 'px';
+            document.body.appendChild(mark);
+            setTimeout(() => mark.remove(), 1500);
+        }
+
+        function spawnCelebrationFlash() {
+            const flash = document.createElement('div');
+            flash.className = 'celebration-flash';
+            appScreen.appendChild(flash);
+            setTimeout(() => flash.remove(), 1200);
+        }
+
+        function celebrateMaxAffection() {
+            setSceneStatus('Kasih maksimum', 'Hati melimpah');
+            affectionUi.classList.add('max-affection-pulse');
+            affectionScore.classList.add('max-affection-pulse');
+            spawnCelebrationFlash();
+
+            const totalBursts = 18;
+            for (let i = 0; i < totalBursts; i++) {
+                setTimeout(() => {
+                    const item = maxAffectionPalette[Math.floor(Math.random() * maxAffectionPalette.length)];
+                    const x = window.innerWidth * (0.12 + Math.random() * 0.76);
+                    const y = window.innerHeight * (0.32 + Math.random() * 0.48);
+                    spawnHeart(x, y, {
+                        emoji: item.emoji,
+                        color: item.color,
+                        size: 22 + Math.floor(Math.random() * 18),
+                        duration: 1500 + Math.floor(Math.random() * 700),
+                        extraClass: 'rainbow-heart'
+                    });
+                }, i * 90);
+            }
+
+            for (let i = 0; i < 8; i++) {
+                setTimeout(() => {
+                    const x = window.innerWidth / 2 + (Math.random() * 260 - 130);
+                    const y = window.innerHeight * 0.7 + (Math.random() * 120 - 60);
+                    spawnHeart(x, y, {
+                        emoji: i % 2 === 0 ? '💞' : '✨',
+                        color: i % 2 === 0 ? '#fb7185' : '#fde68a',
+                        size: 28 + Math.floor(Math.random() * 14),
+                        duration: 1700,
+                        extraClass: 'rainbow-heart'
+                    });
+                }, i * 70);
+            }
+
+            setTimeout(() => {
+                affectionUi.classList.remove('max-affection-pulse');
+                affectionScore.classList.remove('max-affection-pulse');
+            }, 1900);
+        }
+
+        function resetGiftDrag() {
+            activeGiftOffset = 0;
+            giftDrag.classList.remove('dragging');
+            giftDrag.style.transform = 'translateY(-50%)';
+        }
+
+        function hideSideEvent() {
+            clearTimeout(sideEventTimer);
+            sideEventBtn.onclick = null;
+            sideEventWrapper.classList.add('hidden');
+            sideEventBtn.classList.add('hidden');
+            giftLane.classList.add('hidden');
+            giftHint.classList.add('hidden');
+            sideEventText.innerText = '';
+            activeSideEvent = null;
+            isGiftDragging = false;
+            resetGiftDrag();
+            if (appScreen) appScreen.classList.remove('side-event-open');
+        }
+
+        function launchGiftProjectile(emoji) {
+            const rect = giftDrag.getBoundingClientRect();
+            const targetX = window.innerWidth * 0.53;
+            const targetY = window.innerHeight * 0.56;
+            const projectile = document.createElement('div');
+            projectile.className = 'gift-projectile';
+            projectile.innerText = emoji;
+            projectile.style.left = `${rect.left}px`;
+            projectile.style.top = `${rect.top}px`;
+            document.body.appendChild(projectile);
+
+            const animation = projectile.animate([
+                { transform: 'translate3d(0, 0, 0) scale(1)', opacity: 1 },
+                { transform: `translate3d(${targetX - rect.left}px, ${targetY - rect.top}px, 0) scale(0.82)`, opacity: 1 },
+                { transform: `translate3d(${targetX - rect.left + 18}px, ${targetY - rect.top - 22}px, 0) scale(0.62)`, opacity: 0 }
+            ], {
+                duration: 820,
+                easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                fill: 'forwards'
+            });
+
+            animation.onfinish = () => projectile.remove();
+        }
+
+        function completeSideEvent(eventData, success = true) {
+            clearTimeout(sideEventTimer);
+
+            if (success && eventData.type === 'gift') {
+                launchGiftProjectile(eventData.giftEmoji);
+                setTimeout(() => {
+                    const centerX = window.innerWidth / 2;
+                    const centerY = window.innerHeight * 0.58;
+                    spawnHeart(centerX - 18, centerY - 20, { emoji: eventData.giftEmoji, size: 30, duration: 1300 });
+                    spawnHeart(centerX + 10, centerY - 36, { emoji: '💖', color: '#ff77c8', size: 24, duration: 1500, extraClass: 'rainbow-heart' });
+                    spawnHeart(centerX + 30, centerY - 6, { emoji: '✨', color: '#fde68a', size: 24, duration: 1500, extraClass: 'rainbow-heart' });
+                }, 230);
+            }
+
+            if (success && eventData.burstEmoji) {
+                const rightX = window.innerWidth * 0.82;
+                const rightY = window.innerHeight * 0.46;
+                spawnHeart(rightX, rightY, { emoji: eventData.burstEmoji, size: 28, duration: 1200 });
+                spawnHeart(rightX - 24, rightY - 26, { emoji: '💖', color: '#ff77c8', size: 22, duration: 1400, extraClass: 'rainbow-heart' });
+            }
+
+            hideSideEvent();
+
+            if (success) {
+                updateMoodNeeds(eventData.needEffect || { boredomDelta: -10, boostDelta: 1 });
+                updateAffection(eventData.affChange);
+                isEventActive = false;
+                playResponse(eventData.actionVid, eventData.successReply);
+            } else {
+                updateMoodNeeds(eventData.failNeedEffect || { hungerDelta: 4, boredomDelta: 10, setBoost: 0 });
+                updateAffection(eventData.failAffChange ?? -5);
+                isEventActive = false;
+                playResponse(eventData.failVid, eventData.failReply);
+            }
+        }
+
+        function showSideTapEvent(eventData) {
+            setSceneStatus(eventData.label || 'Kejutan', 'Isyarat di kanan');
+            typeWriter(eventData.prompt, true);
+
+            setTimeout(() => {
+                if (!isEventActive) return;
+                if (appScreen) appScreen.classList.add('side-event-open');
+                sideEventLabel.innerText = eventData.label || 'Kejutan';
+                sideEventText.innerText = eventData.panelText || eventData.prompt;
+                sideEventWrapper.classList.remove('hidden');
+                sideEventBtn.classList.remove('hidden');
+                sideEventBtn.innerText = eventData.btnText;
+                sideEventBtn.onclick = () => completeSideEvent(eventData, true);
+                sideEventTimer = setTimeout(() => completeSideEvent(eventData, false), eventData.timeout || 4500);
+            }, 900);
+        }
+
+        function showGiftEvent(eventData) {
+            setSceneStatus(eventData.label || 'Hadiah Muncul', 'Leret ke arahnya');
+            typeWriter(eventData.prompt, true);
+
+            setTimeout(() => {
+                if (!isEventActive) return;
+                if (appScreen) appScreen.classList.add('side-event-open');
+                activeSideEvent = eventData;
+                sideEventLabel.innerText = eventData.label || 'Hadiah Muncul';
+                sideEventText.innerText = eventData.panelText || eventData.prompt;
+                giftHint.innerText = eventData.hint || 'Leret kiri untuk hantar';
+                giftDrag.innerText = eventData.giftEmoji || '🎁';
+                giftDrag.style.background = eventData.giftBg || 'linear-gradient(135deg, rgba(255, 214, 102, 0.98), rgba(251, 146, 60, 0.92))';
+                resetGiftDrag();
+                sideEventWrapper.classList.remove('hidden');
+                giftLane.classList.remove('hidden');
+                giftHint.classList.remove('hidden');
+                sideEventTimer = setTimeout(() => completeSideEvent(eventData, false), eventData.timeout || 5600);
+            }, 900);
+        }
+
+        function handleGiftPointerDown(e) {
+            if (!activeSideEvent || activeSideEvent.type !== 'gift') return;
+            isGiftDragging = true;
+            giftDragStartX = e.clientX;
+            giftDrag.classList.add('dragging');
+            if (giftDrag.setPointerCapture) giftDrag.setPointerCapture(e.pointerId);
+        }
+
+        function handleGiftPointerMove(e) {
+            if (!isGiftDragging || !activeSideEvent || activeSideEvent.type !== 'gift') return;
+            const delta = Math.min(0, e.clientX - giftDragStartX);
+            activeGiftOffset = Math.max(delta, -142);
+            giftDrag.style.transform = `translate(${activeGiftOffset}px, -50%)`;
+
+            if (Math.abs(activeGiftOffset) >= 118) {
+                isGiftDragging = false;
+                completeSideEvent(activeSideEvent, true);
+            }
+        }
+
+        function handleGiftPointerUp(e) {
+            if (!isGiftDragging) return;
+            isGiftDragging = false;
+            giftDrag.classList.remove('dragging');
+            if (giftDrag.releasePointerCapture && giftDrag.hasPointerCapture && giftDrag.hasPointerCapture(e.pointerId)) {
+                giftDrag.releasePointerCapture(e.pointerId);
+            }
+            resetGiftDrag();
+        }
+
+        function typeWriter(text, isPrompt = false) {
+            clearInterval(typeInterval);
+            clearTimeout(idleTimer);
+            clearTimeout(hideDialogueTimer);
+            
+            dialogueContainer.classList.add('show');
+            dialogueText.innerHTML = '';
+            let i = 0;
+            
+            typeInterval = setInterval(() => {
+                if (i < text.length) {
+                    dialogueText.innerHTML += text.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(typeInterval);
+                    
+                    if (!isPrompt) {
+                        startIdleTimer();
+                        hideDialogueTimer = setTimeout(() => {
+                            if(!isPlayingAction && !isEventActive) {
+                                dialogueContainer.classList.remove('show');
+                            }
+                        }, 5000);
+                    }
+                }
+            }, 40);
+        }
+
+        // --- PENGENDALI KEJADIAN RAWAK ---
+        function triggerRandomEvent(eventData) {
+            isEventActive = true; 
+            
+            if (eventData.type === 'choice') {
+                setSceneStatus('Peristiwa pilihan', 'Pilih jawapan');
+                typeWriter(eventData.prompt, true);
+                
+                setTimeout(() => {
+                    choicesContainer.classList.remove('hidden');
+                    
+                    choice1Btn.innerText = eventData.choices[0].text;
+                    choice1Btn.onclick = () => handleChoice(eventData.choices[0]);
+                    
+                    choice2Btn.innerText = eventData.choices[1].text;
+                    choice2Btn.onclick = () => handleChoice(eventData.choices[1]);
+                    
+                }, 1000);
+
+            } else if (eventData.type === 'action') {
+                setSceneStatus('Aksi pantas', 'Bertindak sebelum masa habis');
+                typeWriter(eventData.prompt, true);
+                
+                setTimeout(() => {
+                    actionBtnWrapper.classList.remove('hidden');
+                    qteActionBtn.innerText = eventData.btnText;
+                    
+                    let clicked = false;
+                    
+                    qteActionBtn.onclick = () => {
+                        clicked = true;
+                        actionBtnWrapper.classList.add('hidden');
+                        clearTimeout(qteTimer);
+                        setSceneStatus('Reaksi manis', 'Masa yang tepat');
+                        
+                        updateMoodNeeds(getActionMoodImpact(true));
+                        updateAffection(eventData.affChange);
+                        const centerX = window.innerWidth / 2;
+                        const centerY = window.innerHeight / 2;
+                        spawnHeart(centerX, centerY - 50);
+
+                        isEventActive = false;
+                        triggerAction(eventData.actionVid, eventData.successReply);
+                    };
+
+                    qteTimer = setTimeout(() => {
+                        if (!clicked) {
+                            actionBtnWrapper.classList.add('hidden');
+                            isEventActive = false;
+                            setSceneStatus('Terlepas peluang', 'Terlalu lambat');
+                            updateMoodNeeds(getActionMoodImpact(false));
+                            updateAffection(-5); 
+                            triggerAction(eventData.failVid, eventData.failReply);
+                        }
+                    }, eventData.timeout || 8000);
+
+                }, 1000);
+            } else if (eventData.type === 'sideTap') {
+                showSideTapEvent(eventData);
+            } else if (eventData.type === 'gift') {
+                showGiftEvent(eventData);
+            }
+        }
+
+        function handleChoice(choiceData) {
+            choicesContainer.classList.add('hidden');
+            setSceneStatus(choiceData.affChange > 0 ? 'Jawapan manis' : 'Jawapan kekok', choiceData.affChange > 0 ? 'Itu menjadi' : 'Itu boleh lebih baik');
+            
+            updateMoodNeeds(getChoiceMoodImpact(choiceData));
+            updateAffection(choiceData.affChange);
+            
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+            if (choiceData.affChange > 0) spawnHeart(centerX, centerY - 50);
+            else spawnAngry(centerX, centerY - 50);
+
+            isEventActive = false; 
+            playResponse(choiceData.actionVid, choiceData.reply);
+        }
+
+
+        // --- IDLE TIMER DINAMIK ---
+        function startIdleTimer() {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                if (!isPlayingAction && appStarted && !isEventActive) {
+                    tickMoodNeeds();
+                    const priorityEvent = getPriorityMoodEvent();
+                    if (priorityEvent) {
+                        triggerRandomEvent(priorityEvent);
+                        return;
+                    }
+                    
+                    const roll = Math.random();
+                    if (roll < 0.60) {
+                        const evt = pickRandom(randomEvents);
+                        triggerRandomEvent(evt);
+                    } else if (roll < 0.84) {
+                        const evt = pickRandom(sideEvents);
+                        triggerRandomEvent(evt);
+                    } else {
+                        const randomText = pickRandom(idleDialogues);
+                        setSceneStatus('Sembang rehat', 'Perbualan lembut');
+                        typeWriter(randomText);
+                    }
+
+                }
+            }, 5200); 
+        }
+
+        // --- GREETING FUNCTION ---
+        function getGreeting() {
+            return "Hii... malam ini sunyi lagi, dan aku sangat gembira awak ada di sini bersama aku.";
+        }
+
+        // --- MULA APLIKASI ---
+        async function startApp() {
+            if (appStarted) return;
+            startBtnText.innerHTML = `<span class="loader"></span> Memuat...`;
+            startBtn.classList.remove('pulse-btn');
+            
+            try {
+                // Sedia audio untuk semua video
+                vidIdle.muted = false;
+                vidWave.muted = false;
+                vidAction1.muted = false;
+                vidAction2.muted = false;
+                vidAction3.muted = false; 
+                vidCat.muted = false;
+                vidSweet.muted = false;
+
+                await vidIdle.play();
+                
+                // Preload video yang lain
+                await vidWave.play().catch(e=>console.log(e)); vidWave.pause();
+                await vidAction1.play().catch(e=>console.log(e)); vidAction1.pause();
+                await vidAction2.play().catch(e=>console.log(e)); vidAction2.pause();
+                await vidAction3.play().catch(e=>console.log(e)); vidAction3.pause();
+                await vidCat.play().catch(e=>console.log(e)); vidCat.pause();
+                await vidSweet.play().catch(e=>console.log(e)); vidSweet.pause();
+
+                appStarted = true;
+                introScreen.classList.add('hidden');
+                appScreen.classList.remove('hidden');
+
+                loadLocalMemory();
+                refreshAffectionUi();
+                syncStoryChapters();
+                setSceneStatus('Adegan salam', 'Sambungan berjaya');
+
+                triggerAction(vidWave, getGreeting());
+
+            } catch (err) {
+                console.error("Autoplay halang:", err);
+                startBtnText.innerText = "Ralat! Sentuh Lagi";
+                startBtn.classList.add('pulse-btn');
+            }
+        }
+
+        setViewportHeight();
+
+        startBtn.addEventListener('click', startApp);
+        startBtn.addEventListener('touchstart', startApp, {passive: true});
+        if (storyBtn) storyBtn.addEventListener('click', openStoryPanel);
+        if (characterBtn) characterBtn.addEventListener('click', () => navigateToLink(characterBtn));
+        if (storyCloseBtn) storyCloseBtn.addEventListener('click', closeStoryPanel);
+        if (storyOverlay) {
+            storyOverlay.addEventListener('click', (e) => {
+                if (e.target === storyOverlay) closeStoryPanel();
+            });
+        }
+        if (chapter1Btn) chapter1Btn.addEventListener('click', () => {
+            unlockChapter2();
+            navigateToLink(chapter1Btn);
+        });
+        if (chapter2Btn) chapter2Btn.addEventListener('click', () => {
+            if (!chapter2Btn.disabled) navigateToLink(chapter2Btn);
+        });
+        giftDrag.addEventListener('pointerdown', handleGiftPointerDown);
+        giftDrag.addEventListener('pointermove', handleGiftPointerMove);
+        giftDrag.addEventListener('pointerup', handleGiftPointerUp);
+        giftDrag.addEventListener('pointercancel', handleGiftPointerUp);
+        headpatBtn.addEventListener('click', triggerManualHeadPat);
+        if (giftEventBtn) giftEventBtn.addEventListener('click', triggerManualGiftEvent);
+        if (feedBtn) feedBtn.addEventListener('click', triggerManualFeed);
+        window.addEventListener('resize', () => {
+            setViewportHeight();
+        });
+
+        // --- PENGENDALIAN AKSI ---
+        function triggerAction(actionVidElement, speechText) {
+            if (isPlayingAction || isEventActive) return; 
+            if (speechText) typeWriter(speechText);
+            
+            isPlayingAction = true;
+            actionVidElement.currentTime = 0;
+            
+            let playPromise = actionVidElement.play();
+            if (playPromise !== undefined) {
+                playPromise.then(_ => {
+                    actionVidElement.classList.add('active'); 
+                }).catch(error => {
+                    isPlayingAction = false;
+                });
+            } else {
+                actionVidElement.classList.add('active');
+            }
+        }
+
+        function handleActionEnd(e) {
+            const vid = e.target;
+            vid.classList.remove('active'); 
+            isPlayingAction = false;
+            
+            if(vidIdle.paused) {
+                vidIdle.play().catch(e => console.log(e));
+            }
+
+            setSceneStatus('Mod rehat', 'Menunggu awak');
+            
+            startIdleTimer();
+        }
+
+        // Ikat event "ended" pada semua video
+        vidWave.addEventListener('ended', handleActionEnd);
+        vidAction1.addEventListener('ended', handleActionEnd);
+        vidAction2.addEventListener('ended', handleActionEnd);
+        vidAction3.addEventListener('ended', handleActionEnd); 
+        vidCat.addEventListener('ended', handleActionEnd);
+        vidSweet.addEventListener('ended', handleActionEnd);
+
+        // --- INTERAKSI SENTUHAN (HANYA TRIGGER MARAH 1.0) ---
+        function getCoords(e) {
+            if (e.touches && e.touches.length > 0) {
+                return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+            return { x: e.clientX, y: e.clientY };
+        }
+
+        function handleCharacterTouch(e) {
+            e.preventDefault();
+            if (isPlayingAction || isEventActive) return;
+            setSceneStatus('Reaksi marah', 'Terlalu banyak sentuhan');
+            
+            const coords = getCoords(e);
+            spawnAngry(coords.x, coords.y); 
+            updateMoodNeeds({ boredomDelta: 10, hungerDelta: 4, setBoost: 0 });
+            updateAffection(-5); 
+            
+            // Menyentuh di mana-mana bahagian karakter akan trigger marah 1.0
+            triggerAction(vidAction2, "Hey! Jangan sentuh di situ, baka!");
+        }
+
+        zoneCharacter.addEventListener('click', handleCharacterTouch);
+        zoneCharacter.addEventListener('touchstart', handleCharacterTouch, {passive: false});
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
