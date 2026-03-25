@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Sistem Pemilihan Companion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700;800&display=swap');
+        
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; 
+            overscroll-behavior-y: contain;
+        }
+
+        /* Sembunyikan scrollbar sepenuhnya */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .character-gradient {
+            background: linear-gradient(0deg, #0f172a 10%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0) 100%);
+        }
+
+        .page-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view {
+            position: absolute;
+            inset: 0;
+            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            display: flex;
+            flex-direction: column;
+            background: #0f172a;
+            z-index: 10;
+        }
+
+        .view-hidden-right { transform: translateX(100%); }
+        .view-hidden-left { transform: translateX(-30%); opacity: 0; }
+
+        .stat-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ec4899, #f472b6);
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
+        }
+
+        .btn-action {
+            background: #ec4899;
+            color: white;
+            font-weight: 800;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(236, 72, 153, 0.4);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-action:active { transform: scale(0.95); background: #db2777; }
+
+        .badge {
+            background: rgba(236, 72, 153, 0.15);
+            color: #f472b6;
+            border: 1px solid rgba(236, 72, 153, 0.3);
+            padding: 4px 12px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Ruang bawah tambahan untuk skrol melepasi butang fixed */
+        .bottom-spacer {
+            height: 140px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+        
+        <!-- HALAMAN SENARAI -->
+        <div id="list-view" class="view p-6 no-scrollbar overflow-y-auto">
+            <header class="mt-8 mb-10">
+                <span class="text-pink-500 text-[10px] font-bold uppercase tracking-[0.4em]">Companion List</span>
+                <h1 class="text-4xl font-extrabold tracking-tight mt-1">Pilih Teman</h1>
+            </header>
+
+            <div id="list-content" class="space-y-6 pb-12">
+                <!-- Dijana via JavaScript -->
+            </div>
+        </div>
+
+        <!-- HALAMAN BUTIRAN -->
+        <div id="detail-view" class="view view-hidden-right no-scrollbar overflow-y-auto">
+            <!-- Dijana via JavaScript -->
+        </div>
+
+    </div>
+
+    <script>
+        const characters = [
+            {
+                id: 1,
+                name: "Hiata",
+                trait: "Pemalu & Polos",
+                image: "https://i.postimg.cc/gk2XTCBB/Idle.jpg",
+                file: "hiata.html",
+                desc: "Seorang gadis yang sangat pemalu dan sering kelihatan bingung (polos), tetapi mempunyai tarikan 'body goals' yang luar biasa.",
+                stats: {
+                    "Body Goals": 99,
+                    "Kecantikan": 96,
+                    "Karisma": 80,
+                    "Penyayang": 94,
+                    "Manja": 98,
+                    "Kesetiaan": 99
+                }
+            },
+            {
+                id: 2,
+                name: "Kurumi",
+                trait: "Aktif & Ceria",
+                image: "https://i.postimg.cc/3JxSybMZ/Generate-image-Kurumi-202603251906.jpg",
+                file: "kurumi.html",
+                desc: "Penuh dengan tenaga dan sentiasa mencari keseronokan baru. Kehadirannya akan menceriakan hari-hari anda.",
+                stats: {
+                    "Body Goals": 90,
+                    "Kecantikan": 92,
+                    "Karisma": 95,
+                    "Penyayang": 75,
+                    "Ceria": 98,
+                    "Kesetiaan": 85
+                }
+            },
+            {
+                id: 3,
+                name: "Harsya",
+                trait: "Mommy Vibe",
+                image: "https://i.postimg.cc/C5LNqd2G/Remove-gambar-wanita-202603251810.jpg",
+                file: "harsya.html",
+                desc: "Mempunyai aura keibuan yang sangat matang dan penyayang. Namun, dia sangat tegas jika anda tidak mendengar kata.",
+                stats: {
+                    "Body Goals": 96,
+                    "Kecantikan": 99,
+                    "Karisma": 92,
+                    "Penyayang": 100,
+                    "Ketegasan": 88,
+                    "Kesetiaan": 100
+                }
+            }
+        ];
+
+        const listView = document.getElementById('list-view');
+        const detailView = document.getElementById('detail-view');
+        const listContent = document.getElementById('list-content');
+
+        function init() {
+            renderList();
+            lucide.createIcons();
+        }
+
+        function renderList() {
+            listContent.innerHTML = characters.map(c => `
+                <div onclick="openProfile(${c.id})" class="glass-card rounded-[35px] overflow-hidden relative h-72 shadow-2xl cursor-pointer active:scale-95 transition-transform">
+                    <img src="${c.image}" class="w-full h-full object-cover object-top opacity-90">
+                    <div class="absolute inset-0 character-gradient"></div>
+                    <div class="absolute bottom-6 left-8 right-8 flex justify-between items-end">
+                        <div>
+                            <span class="badge mb-2 inline-block">${c.trait}</span>
+                            <h3 class="text-3xl font-black text-white uppercase tracking-tight">${c.name}</h3>
+                        </div>
+                        <div class="w-12 h-12 glass-card rounded-full flex items-center justify-center border border-white/20">
+                            <i data-lucide="chevron-right" class="w-5 h-5 text-white"></i>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openProfile = function(id) {
+            const char = characters.find(c => c.id === id);
+            
+            detailView.innerHTML = `
+                <div class="flex flex-col min-h-full">
+                    <!-- Hero Image Section -->
+                    <div class="relative h-[65vh] shrink-0">
+                        <img src="${char.image}" class="w-full h-full object-cover object-top">
+                        <div class="absolute inset-0 character-gradient"></div>
+                        
+                        <button onclick="closeProfile()" class="absolute top-8 left-6 w-12 h-12 glass-card rounded-2xl flex items-center justify-center border border-white/10 z-50">
+                            <i data-lucide="arrow-left" class="w-6 h-6 text-white"></i>
+                        </button>
+                        
+                        <div class="absolute bottom-10 left-8">
+                            <span class="badge mb-2 inline-block">${char.trait}</span>
+                            <h2 class="text-6xl font-black mt-1 text-white uppercase tracking-tighter">${char.name}</h2>
+                        </div>
+                    </div>
+
+                    <!-- Details Section -->
+                    <div class="p-8 -mt-12 relative z-10 glass-card rounded-t-[50px] flex-grow shadow-2xl border-t border-white/10">
+                        <div class="w-16 h-1 bg-white/10 rounded-full mx-auto mb-10"></div>
+                        
+                        <section class="mb-10">
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Biodata Karakter</h4>
+                            <p class="text-slate-300 leading-relaxed font-light text-lg italic opacity-90">
+                                "${char.desc}"
+                            </p>
+                        </section>
+
+                        <section class="space-y-8">
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Statistik Wanita</h4>
+                            ${Object.entries(char.stats).map(([key, val]) => `
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center text-xs font-bold uppercase">
+                                        <span class="text-slate-400 tracking-widest">${key}</span>
+                                        <span class="text-pink-500">${val}%</span>
+                                    </div>
+                                    <div class="stat-bar-bg">
+                                        <div class="stat-bar-fill" style="width: ${val}%"></div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </section>
+
+                        <!-- Ruang kosong tambahan supaya info bawah tidak halang butang -->
+                        <div class="bottom-spacer"></div>
+                    </div>
+                </div>
+
+                <!-- Fixed Button Container -->
+                <div class="fixed bottom-0 left-0 right-0 p-6 bg-slate-900/60 backdrop-blur-3xl border-t border-white/5 z-[100]">
+                    <button onclick="startGame('${char.file}')" class="btn-action w-full py-5 text-sm">
+                        Mula Temujanji
+                    </button>
+                </div>
+            `;
+
+            listView.classList.add('view-hidden-left');
+            detailView.classList.remove('view-hidden-right');
+            lucide.createIcons();
+            detailView.scrollTo(0, 0); // Reset skrol ke atas
+        };
+
+        window.closeProfile = function() {
+            detailView.classList.add('view-hidden-right');
+            listView.classList.remove('view-hidden-left');
+        };
+
+        window.startGame = function(file) {
+            detailView.innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center p-12 text-center bg-[#0f172a]">
+                    <div class="w-20 h-20 bg-pink-500/20 rounded-full flex items-center justify-center mb-10 animate-pulse shadow-2xl shadow-pink-500/10">
+                        <i data-lucide="heart" class="text-pink-500 w-12 h-12 fill-current"></i>
+                    </div>
+                    <h2 class="text-3xl font-black mb-4 uppercase tracking-tighter text-white">Menghubungkan...</h2>
+                    <p class="text-slate-400 text-sm tracking-widest uppercase opacity-60">Sila tunggu sebentar.</p>
+                </div>
+            `;
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                window.location.href = file;
+            }, 1200);
+        };
+
+        init();
+    </script>
+</body>
+</html>
+
