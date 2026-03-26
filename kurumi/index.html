@@ -170,12 +170,6 @@
             -webkit-backdrop-filter: none !important;
         }
 
-        .affection-score-clear {
-            background: transparent;
-            border: none !important;
-            box-shadow: none !important;
-        }
-
         .hud-dot {
             width: 8px;
             height: 8px;
@@ -399,9 +393,9 @@
             filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.36));
         }
 
-        .right-control-dock {
+        .control-dock {
             position: absolute;
-            right: 12px;
+            left: 12px;
             top: 170px;
             z-index: 41;
             display: flex;
@@ -411,12 +405,12 @@
         }
 
         @media (min-width: 640px) {
-            .right-control-dock {
+            .control-dock {
                 top: 190px;
             }
         }
 
-        .right-control-btn {
+        .control-btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
@@ -431,27 +425,27 @@
             transition: transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
         }
 
-        .right-control-btn:hover {
+        .control-btn:hover {
             transform: translateY(-1px);
             background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06));
             border-color: rgba(255, 255, 255, 0.18);
         }
 
-        .right-control-btn.is-alert {
+        .control-btn.is-alert {
             border-color: rgba(251, 191, 36, 0.45);
             box-shadow: 0 16px 34px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(251, 191, 36, 0.18), 0 0 28px rgba(251, 191, 36, 0.12);
             animation: dockAlertPulse 1.4s ease-in-out infinite alternate;
         }
 
-        .right-control-btn.is-muted {
+        .control-btn.is-muted {
             opacity: 0.72;
         }
 
-        .right-control-btn:active {
+        .control-btn:active {
             transform: scale(0.97);
         }
 
-        .right-control-icon {
+        .control-icon {
             width: 40px;
             height: 40px;
             flex-shrink: 0;
@@ -492,8 +486,8 @@
             height: 22px;
         }
 
-        .dock-icon--character {
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.9), rgba(99, 102, 241, 0.92));
+        .dock-icon--exit {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.9), rgba(185, 28, 28, 0.92));
         }
 
         .dock-icon--story {
@@ -656,7 +650,7 @@
             text-align: center;
         }
 
-        #app-screen.side-event-open #right-control-dock {
+        #app-screen.side-event-open #control-dock {
             display: none;
         }
 
@@ -722,21 +716,6 @@
             0% { opacity: 0; }
             12% { opacity: 1; }
             100% { opacity: 0; }
-        }
-
-        @keyframes maxAffectionGlow {
-            0%, 100% {
-                box-shadow: 0 0 24px rgba(236, 72, 153, 0.22);
-                transform: scale(1);
-            }
-            50% {
-                box-shadow: 0 0 36px rgba(236, 72, 153, 0.44), 0 0 56px rgba(56, 189, 248, 0.22);
-                transform: scale(1.06);
-            }
-        }
-
-        .max-affection-pulse {
-            animation: maxAffectionGlow 0.8s ease-in-out 2;
         }
 
         .pop-anim {
@@ -826,25 +805,6 @@
             </div>
         </div>
 
-        <!-- NEW UI: Vertical Affection Tube (Kiri) -->
-        <div data-ui-layer="primary" class="absolute top-20 sm:top-24 left-1 sm:left-2 z-30 pointer-events-none">
-            <div class="ui-card px-4 py-5 flex flex-col items-center gap-3 w-[92px]">
-                <div id="affection-icon" class="text-3xl drop-shadow-[0_0_18px_rgba(255,105,180,0.95)] transition-transform duration-300">🤍</div>
-                <div id="affection-level" class="text-[11px] font-semibold text-white/65 text-center">Pertemuan pertama</div>
-
-                <div id="affection-ui" class="relative w-6 h-52 bg-black/40 border-2 border-pink-300/40 rounded-full overflow-hidden shadow-[0_0_22px_rgba(236,72,153,0.24)] p-0.5 flex flex-col justify-end">
-                    <div id="affection-bar" class="w-full bg-gradient-to-t from-purple-600 via-pink-500 to-pink-300 rounded-full transition-all duration-500 ease-out relative shadow-[0_0_10px_rgba(255,255,255,0.5)_inset]" style="height: 0%">
-                        <div class="absolute top-0 w-full h-1 bg-white/60 rounded-full blur-[1px]"></div>
-                    </div>
-                    <div class="absolute inset-0 w-1/2 h-full glass-reflection rounded-l-full pointer-events-none"></div>
-                </div>
-
-                <div id="affection-score" class="affection-score-clear text-white text-xs font-bold tracking-[0.28em] drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] px-3 py-1.5 rounded-full">
-                    0%
-                </div>
-            </div>
-        </div>
-
         <!-- Video Container -->
         <div class="flex-1 relative w-full h-full overflow-hidden" id="video-container">
             <!-- Basic Videos -->
@@ -895,26 +855,26 @@
                 </div>
             </div>
 
-            <div id="right-control-dock" class="right-control-dock">
-                <button id="gift-event-btn" class="right-control-btn" type="button" title="Leret hadiah" aria-label="Leret hadiah">
-                    <span class="right-control-icon">🎁</span>
-                </button>
-
-                <button id="headpat-btn" class="right-control-btn" type="button" title="Usap Kepala" aria-label="Usap Kepala">
-                    <span class="right-control-icon">🫳</span>
-                </button>
-
-                <button id="character-btn" class="right-control-btn" type="button" title="Watak" aria-label="Watak" data-link="character.html">
-                    <span class="dock-icon dock-icon--character" aria-hidden="true">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M5.2 19.2c1.4-3.2 4.3-5.2 6.8-5.2s5.4 2 6.8 5.2"/>
-                            <circle cx="12" cy="8.2" r="3.5"/>
-                            <path d="M7.4 6.4c.6-2.1 2.5-3.6 4.6-3.6s4 1.5 4.6 3.6"/>
+            <div id="control-dock" class="control-dock">
+                <button id="exit-btn" class="control-btn" type="button" title="Keluar" aria-label="Keluar" data-link="../index.html">
+                    <span class="dock-icon dock-icon--exit" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                            <polyline points="16 17 21 12 16 7"></polyline>
+                            <line x1="21" y1="12" x2="9" y2="12"></line>
                         </svg>
                     </span>
                 </button>
 
-                <button id="story-btn" class="right-control-btn" type="button" title="Cerita" aria-label="Cerita" data-link="story.html">
+                <button id="gift-event-btn" class="control-btn" type="button" title="Leret hadiah" aria-label="Leret hadiah">
+                    <span class="control-icon">🎁</span>
+                </button>
+
+                <button id="headpat-btn" class="control-btn" type="button" title="Usap Kepala" aria-label="Usap Kepala">
+                    <span class="control-icon">🫳</span>
+                </button>
+
+                <button id="story-btn" class="control-btn" type="button" title="Cerita" aria-label="Cerita" data-link="story.html">
                     <span class="dock-icon dock-icon--story" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M5.5 5.2h8.2c1.8 0 3.3 1.5 3.3 3.3v10.3H8.8c-1.8 0-3.3-1.5-3.3-3.3V5.2z"/>
@@ -941,27 +901,10 @@
                     </button>
                 </div>
 
-                <div class="story-chapters">
-                    <button id="chapter-1-btn" class="story-chapter-btn is-available" type="button" data-link="chapter1.html">
-                        <div class="chapter-meta">
-                            <span class="chapter-badge">Bab 1</span>
-                            <span class="chapter-title">Permulaan</span>
-                            <span class="chapter-desc">Bertemu Kurumi buat kali pertama.</span>
-                        </div>
-                        <span class="chapter-action">Mula</span>
-                    </button>
-
-                    <button id="chapter-2-btn" class="story-chapter-btn is-locked" type="button" data-link="chapter2.html" disabled>
-                        <div class="chapter-meta">
-                            <span class="chapter-badge">Bab 2</span>
-                            <span class="chapter-title">Rahsia</span>
-                            <span class="chapter-desc">Dikunci sehingga Bab 1 dibuka.</span>
-                        </div>
-                        <span class="chapter-lock">🔒 Terkunci</span>
-                    </button>
+                <div class="py-12 text-center">
+                    <div class="text-4xl mb-4 opacity-60">📖</div>
+                    <p class="text-white/70 font-medium text-lg">Belum ada Cerita tersedia</p>
                 </div>
-
-                <div id="story-lock-hint" class="story-hint">Selesaikan Bab 1 untuk membuka Bab 2.</div>
             </div>
         </div>
 
@@ -1033,22 +976,14 @@
         const giftHint = document.getElementById('gift-hint');
         const giftEventBtn = document.getElementById('gift-event-btn');
         const headpatBtn = document.getElementById('headpat-btn');
-        const characterBtn = document.getElementById('character-btn');
+        const exitBtn = document.getElementById('exit-btn');
         const storyBtn = document.getElementById('story-btn');
         const storyOverlay = document.getElementById('story-overlay');
         const storyPanel = document.getElementById('story-panel');
         const storyCloseBtn = document.getElementById('story-close-btn');
-        const chapter1Btn = document.getElementById('chapter-1-btn');
-        const chapter2Btn = document.getElementById('chapter-2-btn');
-        const storyLockHint = document.getElementById('story-lock-hint');
         const feedBtn = document.getElementById('feed-btn');
         const feedBtnIcon = document.getElementById('feed-btn-icon');
         
-        const affectionUi = document.getElementById('affection-ui');
-        const affectionIcon = document.getElementById('affection-icon');
-        const affectionScore = document.getElementById('affection-score');
-        const affectionBar = document.getElementById('affection-bar');
-        const affectionLevel = document.getElementById('affection-level');
         const sceneStatus = document.getElementById('scene-status');
         const moodStatus = document.getElementById('mood-status');
         const dialogueMicroStatus = document.getElementById('dialogue-micro-status');
@@ -1229,7 +1164,6 @@
 
         function openStoryPanel() {
             if (!storyOverlay) return;
-            syncStoryChapters();
             storyOverlay.classList.remove('hidden');
             requestAnimationFrame(() => storyOverlay.classList.add('show'));
         }
@@ -1238,43 +1172,6 @@
             if (!storyOverlay) return;
             storyOverlay.classList.remove('show');
             setTimeout(() => storyOverlay.classList.add('hidden'), 180);
-        }
-
-        function syncStoryChapters() {
-            if (!chapter2Btn) return;
-            const unlocked = readStorage(storageKeys.storyChapter2, 'false') === 'true';
-            chapter2Btn.disabled = !unlocked;
-            chapter2Btn.classList.toggle('is-locked', !unlocked);
-            chapter2Btn.classList.toggle('is-available', unlocked);
-
-            if (unlocked) {
-                const desc = chapter2Btn.querySelector('.chapter-desc');
-                if (desc) desc.innerText = 'Bab 2 kini boleh dimainkan.';
-                chapter2Btn.querySelector('.chapter-lock')?.remove();
-                if (!chapter2Btn.querySelector('.chapter-action')) {
-                    const action = document.createElement('span');
-                    action.className = 'chapter-action';
-                    action.innerText = 'Mula';
-                    chapter2Btn.appendChild(action);
-                }
-                if (storyLockHint) storyLockHint.innerText = 'Bab 2 sudah dibuka.';
-            } else {
-                const desc = chapter2Btn.querySelector('.chapter-desc');
-                if (desc) desc.innerText = 'Dikunci sehingga Bab 1 dibuka.';
-                chapter2Btn.querySelector('.chapter-action')?.remove();
-                if (!chapter2Btn.querySelector('.chapter-lock')) {
-                    const lock = document.createElement('span');
-                    lock.className = 'chapter-lock';
-                    lock.innerText = '🔒 Terkunci';
-                    chapter2Btn.appendChild(lock);
-                }
-                if (storyLockHint) storyLockHint.innerText = 'Selesaikan Bab 1 untuk membuka Bab 2.';
-            }
-        }
-
-        function unlockChapter2() {
-            writeStorage(storageKeys.storyChapter2, 'true');
-            syncStoryChapters();
         }
 
         function navigateToLink(element) {
@@ -1438,44 +1335,9 @@
         }
 
         function refreshAffectionUi(animate = false) {
-            affectionScore.innerText = currentAffection + "%";
-            affectionBar.style.height = (currentAffection / maxAffection * 100) + "%";
-
-            let level = 'Pertemuan pertama';
-            let icon = '🤍';
-
-            if (currentAffection >= 80) {
-                level = 'Tahap jiwa sejiwa';
-                icon = '💞';
-            } else if (currentAffection >= 60) {
-                level = 'Sangat rapat';
-                icon = '💕';
-            } else if (currentAffection >= 40) {
-                level = 'Zon selesa';
-                icon = '💖';
-            } else if (currentAffection >= 20) {
-                level = 'Semakin rapat';
-                icon = '💓';
-            } else if (currentAffection > 0) {
-                level = 'Mencairkan suasana';
-                icon = '🩷';
-            }
-
             const moodProfile = getMoodProfile();
-
             if (moodStatus) moodStatus.innerText = moodProfile.label;
-            affectionLevel.innerText = level;
-            affectionIcon.innerText = icon;
             updateFeedButtonUi();
-
-            if (animate) {
-                affectionUi.classList.add('pop-anim');
-                affectionIcon.classList.add('scale-125');
-                setTimeout(() => {
-                    affectionUi.classList.remove('pop-anim');
-                    affectionIcon.classList.remove('scale-125');
-                }, 300);
-            }
         }
 
         // --- DATA DIALOG KOSONG ---
@@ -1749,8 +1611,6 @@
 
         function celebrateMaxAffection() {
             setSceneStatus('Kasih maksimum', 'Hati melimpah');
-            affectionUi.classList.add('max-affection-pulse');
-            affectionScore.classList.add('max-affection-pulse');
             spawnCelebrationFlash();
 
             const totalBursts = 18;
@@ -1782,11 +1642,6 @@
                     });
                 }, i * 70);
             }
-
-            setTimeout(() => {
-                affectionUi.classList.remove('max-affection-pulse');
-                affectionScore.classList.remove('max-affection-pulse');
-            }, 1900);
         }
 
         function resetGiftDrag() {
@@ -2112,7 +1967,6 @@
 
                 loadLocalMemory();
                 refreshAffectionUi();
-                syncStoryChapters();
                 setSceneStatus('Adegan salam', 'Sambungan berjaya');
 
                 triggerAction(vidWave, getGreeting());
@@ -2129,20 +1983,13 @@
         startBtn.addEventListener('click', startApp);
         startBtn.addEventListener('touchstart', startApp, {passive: true});
         if (storyBtn) storyBtn.addEventListener('click', openStoryPanel);
-        if (characterBtn) characterBtn.addEventListener('click', () => navigateToLink(characterBtn));
+        if (exitBtn) exitBtn.addEventListener('click', () => navigateToLink(exitBtn));
         if (storyCloseBtn) storyCloseBtn.addEventListener('click', closeStoryPanel);
         if (storyOverlay) {
             storyOverlay.addEventListener('click', (e) => {
                 if (e.target === storyOverlay) closeStoryPanel();
             });
         }
-        if (chapter1Btn) chapter1Btn.addEventListener('click', () => {
-            unlockChapter2();
-            navigateToLink(chapter1Btn);
-        });
-        if (chapter2Btn) chapter2Btn.addEventListener('click', () => {
-            if (!chapter2Btn.disabled) navigateToLink(chapter2Btn);
-        });
         giftDrag.addEventListener('pointerdown', handleGiftPointerDown);
         giftDrag.addEventListener('pointermove', handleGiftPointerMove);
         giftDrag.addEventListener('pointerup', handleGiftPointerUp);
@@ -2224,11 +2071,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
