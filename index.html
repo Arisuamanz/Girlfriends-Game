@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Sistem Pemilihan Companion</title>
+    <title>Companion Selection Premium</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -16,30 +16,93 @@
         }
 
         body {
-            background-color: #0f172a;
-            color: #f8fafc;
+            background-color: #02040a;
+            color: #ffffff;
             margin: 0;
             padding: 0;
             overflow: hidden; 
             overscroll-behavior-y: contain;
         }
 
-        /* Sembunyikan scrollbar sepenuhnya */
+        /* Animated Mesh Background */
+        .bg-mesh {
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: 
+                radial-gradient(at 0% 0%, hsla(339, 49%, 30%, 0.4) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, hsla(225, 39%, 30%, 0.4) 0, transparent 50%);
+            animation: bg-pulse 10s ease infinite alternate;
+        }
+
+        @keyframes bg-pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.1); }
+        }
+
+        /* Hide scrollbars */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-        .glass-card {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        /* Neon Animated Border */
+        .neon-card {
+            position: relative;
+            background: rgba(10, 15, 25, 0.8);
+            border-radius: 35px;
+            z-index: 1;
         }
 
-        .character-gradient {
-            background: linear-gradient(0deg, #0f172a 10%, rgba(15, 23, 42, 0.4) 50%, rgba(15, 23, 42, 0) 100%);
+        .neon-card::before {
+            content: "";
+            position: absolute;
+            inset: -1.5px;
+            border-radius: 36px;
+            padding: 1.5px; 
+            background: linear-gradient(45deg, #ec4899, #3b82f6, #ec4899);
+            background-size: 200% 200%;
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            animation: gradient-move 4s linear infinite;
+            opacity: 0.6;
         }
 
-        .page-container {
+        @keyframes gradient-move {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 200% 50%; }
+        }
+
+        /* Modern Modern Button with Glow */
+        .btn-modern {
+            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            border-radius: 24px;
+            font-weight: 800;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(236, 72, 153, 0.4);
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+
+        .btn-modern::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -100%;
+            width: 50%;
+            height: 200%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transform: skewX(-25deg);
+            animation: shine 4s infinite;
+        }
+
+        @keyframes shine {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* Page Transitions */
+        .view-container {
             width: 100vw;
             height: 100vh;
             max-width: 500px;
@@ -51,80 +114,71 @@
         .view {
             position: absolute;
             inset: 0;
-            transition: transform 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
             display: flex;
             flex-direction: column;
-            background: #0f172a;
             z-index: 10;
         }
 
-        .view-hidden-right { transform: translateX(100%); }
-        .view-hidden-left { transform: translateX(-30%); opacity: 0; }
+        .view-hidden-right { transform: translateX(100%); pointer-events: none; opacity: 0; }
+        .view-hidden-left { transform: translateX(-40%); pointer-events: none; opacity: 0; }
 
-        .stat-bar-bg {
-            height: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            overflow: hidden;
-        }
-
-        .stat-bar-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ec4899, #f472b6);
-            border-radius: 12px;
-            box-shadow: 0 0 15px rgba(236, 72, 153, 0.4);
-        }
-
-        .btn-action {
-            background: #ec4899;
-            color: white;
-            font-weight: 800;
+        /* Stats Bars with Glow */
+        .stat-rail {
+            height: 10px;
+            background: rgba(255, 255, 255, 0.03);
             border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(236, 72, 153, 0.4);
-            transition: all 0.2s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            overflow: hidden;
+            border: 0.5px solid rgba(255,255,255,0.05);
         }
 
-        .btn-action:active { transform: scale(0.95); background: #db2777; }
-
-        .badge {
-            background: rgba(236, 72, 153, 0.15);
-            color: #f472b6;
-            border: 1px solid rgba(236, 72, 153, 0.3);
-            padding: 4px 12px;
-            border-radius: 10px;
-            font-size: 10px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .stat-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ec4899, #3b82f6);
+            border-radius: 20px;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.5);
+            width: 0%;
+            transition: width 1.2s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
-        /* Ruang bawah tambahan untuk skrol melepasi butang fixed */
-        .bottom-spacer {
-            height: 140px;
-            width: 100%;
+        .bottom-spacer { height: 180px; width: 100%; }
+
+        /* Image Mask for Details */
+        .hero-mask {
+            mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
+        }
+
+        .floating { animation: float-anim 5s ease-in-out infinite; }
+        @keyframes float-anim {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
         }
     </style>
 </head>
 <body>
 
-    <div class="page-container">
+    <div class="bg-mesh"></div>
+
+    <div class="view-container">
         
         <!-- HALAMAN SENARAI -->
         <div id="list-view" class="view p-6 no-scrollbar overflow-y-auto">
-            <header class="mt-8 mb-10">
-                <span class="text-pink-500 text-[10px] font-bold uppercase tracking-[0.4em]">Companion List</span>
-                <h1 class="text-4xl font-extrabold tracking-tight mt-1">Pilih Teman</h1>
+            <header class="mt-10 mb-12">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-10 h-[2px] bg-pink-500"></div>
+                    <span class="text-pink-500 text-[10px] font-bold uppercase tracking-[0.5em]">Companion V2</span>
+                </div>
+                <h1 class="text-5xl font-black tracking-tighter leading-none italic">PILIH<br><span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">KARAKTER</span></h1>
             </header>
 
-            <div id="list-content" class="space-y-6 pb-12">
+            <div id="list-content" class="space-y-8 pb-16">
                 <!-- Dijana via JavaScript -->
             </div>
         </div>
 
         <!-- HALAMAN BUTIRAN -->
-        <div id="detail-view" class="view view-hidden-right no-scrollbar overflow-y-auto">
+        <div id="detail-view" class="view view-hidden-right no-scrollbar overflow-y-auto bg-[#02040a]">
             <!-- Dijana via JavaScript -->
         </div>
 
@@ -137,8 +191,8 @@
                 name: "Hiata",
                 trait: "Pemalu & Polos",
                 image: "https://i.postimg.cc/gk2XTCBB/Idle.jpg",
-                file: "hiata/hiata.html",
-                desc: "Seorang gadis yang sangat pemalu dan sering kelihatan bingung (polos), tetapi mempunyai tarikan 'body goals' yang luar biasa.",
+                file: "hiata/index.html",
+                desc: "Gadis pemalu yang sering kelihatan bingung, tetapi mempunyai aura 'body goals' yang sangat kuat dan manja.",
                 stats: {
                     "Body Goals": 99,
                     "Kecantikan": 96,
@@ -153,14 +207,14 @@
                 name: "Kurumi",
                 trait: "Aktif & Ceria",
                 image: "https://i.postimg.cc/3JxSybMZ/Generate-image-Kurumi-202603251906.jpg",
-                file: "kurumi/kurumi.html",
-                desc: "Penuh dengan tenaga dan sentiasa mencari keseronokan baru. Kehadirannya akan menceriakan hari-hari anda.",
+                file: "kurumi/index.html",
+                desc: "Penuh dengan tenaga dan sentiasa mencari kejutan baru. Kehadirannya akan menceriakan hari-hari anda.",
                 stats: {
                     "Body Goals": 90,
                     "Kecantikan": 92,
-                    "Karisma": 95,
+                    "Karisma": 94,
                     "Penyayang": 75,
-                    "Ceria": 98,
+                    "Ceria": 95,
                     "Kesetiaan": 85
                 }
             },
@@ -169,14 +223,14 @@
                 name: "Harsya",
                 trait: "Mommy Vibe",
                 image: "https://i.postimg.cc/C5LNqd2G/Remove-gambar-wanita-202603251810.jpg",
-                file: "harsya/harsya.html",
-                desc: "Mempunyai aura keibuan yang sangat matang dan penyayang. Namun, dia sangat tegas jika anda tidak mendengar kata.",
+                file: "harsya/index.html",
+                desc: "Mempunyai aura 'mommy' yang matang dan penyayang. Dia sangat melindungi tetapi tegas dalam mendidik.",
                 stats: {
-                    "Body Goals": 96,
+                    "Body Goals": 95,
                     "Kecantikan": 99,
-                    "Karisma": 92,
+                    "Karisma": 88,
                     "Penyayang": 100,
-                    "Ketegasan": 88,
+                    "Ketegasan": 90,
                     "Kesetiaan": 100
                 }
             }
@@ -193,16 +247,20 @@
 
         function renderList() {
             listContent.innerHTML = characters.map(c => `
-                <div onclick="openProfile(${c.id})" class="glass-card rounded-[35px] overflow-hidden relative h-72 shadow-2xl cursor-pointer active:scale-95 transition-transform">
-                    <img src="${c.image}" class="w-full h-full object-cover object-top opacity-90">
-                    <div class="absolute inset-0 character-gradient"></div>
-                    <div class="absolute bottom-6 left-8 right-8 flex justify-between items-end">
-                        <div>
-                            <span class="badge mb-2 inline-block">${c.trait}</span>
-                            <h3 class="text-3xl font-black text-white uppercase tracking-tight">${c.name}</h3>
-                        </div>
-                        <div class="w-12 h-12 glass-card rounded-full flex items-center justify-center border border-white/20">
-                            <i data-lucide="chevron-right" class="w-5 h-5 text-white"></i>
+                <div onclick="openProfile(${c.id})" class="neon-card overflow-hidden group cursor-pointer active:scale-95 transition-transform duration-300 shadow-2xl">
+                    <div class="relative h-80">
+                        <img src="${c.image}" class="w-full h-full object-cover object-top transition-transform duration-700 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#02040a] via-transparent to-transparent"></div>
+                        <div class="absolute bottom-6 left-8 right-8 flex justify-between items-end">
+                            <div>
+                                <span class="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg text-[10px] font-bold text-pink-400 uppercase tracking-widest border border-white/10 mb-3 inline-block">
+                                    ${c.trait}
+                                </span>
+                                <h3 class="text-4xl font-black text-white italic uppercase tracking-tighter">${c.name}</h3>
+                            </div>
+                            <div class="w-14 h-14 bg-pink-500/20 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10">
+                                <i data-lucide="arrow-right" class="w-6 h-6 text-pink-500"></i>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -214,56 +272,64 @@
             
             detailView.innerHTML = `
                 <div class="flex flex-col min-h-full">
-                    <!-- Hero Image Section -->
-                    <div class="relative h-[65vh] shrink-0">
-                        <img src="${char.image}" class="w-full h-full object-cover object-top">
-                        <div class="absolute inset-0 character-gradient"></div>
+                    <div class="relative h-[65vh] shrink-0 overflow-hidden">
+                        <img src="${char.image}" class="w-full h-full object-cover object-top floating hero-mask">
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#02040a] via-transparent to-transparent"></div>
                         
-                        <button onclick="closeProfile()" class="absolute top-8 left-6 w-12 h-12 glass-card rounded-2xl flex items-center justify-center border border-white/10 z-50">
-                            <i data-lucide="arrow-left" class="w-6 h-6 text-white"></i>
+                        <button onclick="closeProfile()" class="absolute top-8 left-6 w-14 h-14 bg-black/40 backdrop-blur-xl rounded-2xl flex items-center justify-center border border-white/10 z-50 active:scale-90 transition-transform">
+                            <i data-lucide="chevron-left" class="w-8 h-8 text-white"></i>
                         </button>
                         
                         <div class="absolute bottom-10 left-8">
-                            <span class="badge mb-2 inline-block">${char.trait}</span>
-                            <h2 class="text-6xl font-black mt-1 text-white uppercase tracking-tighter">${char.name}</h2>
+                            <span class="px-4 py-1.5 bg-pink-500/20 backdrop-blur-md text-pink-500 rounded-xl text-[10px] font-black uppercase tracking-widest border border-pink-500/30 mb-2 inline-block">
+                                ${char.trait}
+                            </span>
+                            <h2 class="text-7xl font-black text-white italic tracking-tighter uppercase leading-none">${char.name}</h2>
                         </div>
                     </div>
 
-                    <!-- Details Section -->
-                    <div class="p-8 -mt-12 relative z-10 glass-card rounded-t-[50px] flex-grow shadow-2xl border-t border-white/10">
-                        <div class="w-16 h-1 bg-white/10 rounded-full mx-auto mb-10"></div>
+                    <div class="p-8 -mt-12 relative z-10 bg-gradient-to-b from-white/[0.03] to-transparent backdrop-blur-3xl rounded-t-[60px] flex-grow border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.5)]">
+                        <div class="w-20 h-1.5 bg-white/20 rounded-full mx-auto mb-12"></div>
                         
-                        <section class="mb-10">
-                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Biodata Karakter</h4>
-                            <p class="text-slate-300 leading-relaxed font-light text-lg italic opacity-90">
+                        <section class="mb-14">
+                            <div class="flex items-center gap-3 mb-4">
+                                <i data-lucide="info" class="w-4 h-4 text-pink-500"></i>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em]">BIODATA</h4>
+                            </div>
+                            <p class="text-slate-300 leading-relaxed font-light text-xl italic opacity-90 border-l-2 border-pink-500 pl-4">
                                 "${char.desc}"
                             </p>
                         </section>
 
-                        <section class="space-y-8">
-                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.3em] mb-4">Statistik Wanita</h4>
+                        <section class="space-y-10">
+                            <div class="flex items-center gap-3 mb-6">
+                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-pink-500"></i>
+                                <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.4em]">STATISTIK</h4>
+                            </div>
                             ${Object.entries(char.stats).map(([key, val]) => `
-                                <div class="space-y-3">
-                                    <div class="flex justify-between items-center text-xs font-bold uppercase">
-                                        <span class="text-slate-400 tracking-widest">${key}</span>
-                                        <span class="text-pink-500">${val}%</span>
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">${key}</span>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-lg font-black text-pink-500 italic">${val}</span>
+                                            <span class="text-[10px] font-bold text-pink-500/50">%</span>
+                                        </div>
                                     </div>
-                                    <div class="stat-bar-bg">
-                                        <div class="stat-bar-fill" style="width: ${val}%"></div>
+                                    <div class="stat-rail">
+                                        <div class="stat-fill" style="width: 0%" data-target="${val}"></div>
                                     </div>
                                 </div>
                             `).join('')}
                         </section>
 
-                        <!-- Ruang kosong tambahan supaya info bawah tidak halang butang -->
                         <div class="bottom-spacer"></div>
                     </div>
                 </div>
 
-                <!-- Fixed Button Container -->
-                <div class="fixed bottom-0 left-0 right-0 p-6 bg-slate-900/60 backdrop-blur-3xl border-t border-white/5 z-[100]">
-                    <button onclick="startGame('${char.file}')" class="btn-action w-full py-5 text-sm">
-                        Mula Temujanji
+                <div class="fixed bottom-0 left-0 right-0 p-8 bg-black/60 backdrop-blur-3xl border-t border-white/5 z-[100]">
+                    <button onclick="goToPage('${char.file}')" class="btn-modern w-full py-6 text-sm uppercase tracking-[0.3em] flex items-center justify-center gap-3 group">
+                        MULA TEMUJANJI 
+                        <i data-lucide="sparkles" class="w-5 h-5 group-hover:rotate-45 transition-transform"></i>
                     </button>
                 </div>
             `;
@@ -271,7 +337,14 @@
             listView.classList.add('view-hidden-left');
             detailView.classList.remove('view-hidden-right');
             lucide.createIcons();
-            detailView.scrollTo(0, 0); // Reset skrol ke atas
+            detailView.scrollTo(0, 0);
+
+            // Animate progress bars on open
+            setTimeout(() => {
+                detailView.querySelectorAll('.stat-fill').forEach(bar => {
+                    bar.style.width = bar.getAttribute('data-target') + '%';
+                });
+            }, 300);
         };
 
         window.closeProfile = function() {
@@ -279,24 +352,29 @@
             listView.classList.remove('view-hidden-left');
         };
 
-        window.startGame = function(file) {
+        window.goToPage = function(url) {
+            // Animasi loading transisi
             detailView.innerHTML = `
-                <div class="h-full flex flex-col items-center justify-center p-12 text-center bg-[#0f172a]">
-                    <div class="w-20 h-20 bg-pink-500/20 rounded-full flex items-center justify-center mb-10 animate-pulse shadow-2xl shadow-pink-500/10">
-                        <i data-lucide="heart" class="text-pink-500 w-12 h-12 fill-current"></i>
+                <div class="h-full flex flex-col items-center justify-center p-12 text-center bg-[#02040a]">
+                    <div class="relative w-32 h-32 flex items-center justify-center mb-10">
+                        <div class="absolute inset-0 border-4 border-pink-500/20 rounded-full animate-ping"></div>
+                        <div class="w-24 h-24 bg-gradient-to-tr from-pink-500 to-violet-500 rounded-full flex items-center justify-center shadow-2xl shadow-pink-500/50">
+                            <i data-lucide="heart" class="text-white w-12 h-12 fill-current"></i>
+                        </div>
                     </div>
-                    <h2 class="text-3xl font-black mb-4 uppercase tracking-tighter text-white">Menghubungkan...</h2>
-                    <p class="text-slate-400 text-sm tracking-widest uppercase opacity-60">Sila tunggu sebentar.</p>
+                    <h2 class="text-4xl font-black italic uppercase tracking-tighter text-white mb-2">MENGHUBUNGKAN...</h2>
+                    <p class="text-slate-500 text-xs tracking-widest uppercase opacity-60">Sedang menyediakan sesi anda.</p>
                 </div>
             `;
             lucide.createIcons();
             
             setTimeout(() => {
-                window.location.href = file;
-            }, 1200);
+                window.location.href = url;
+            }, 1500);
         };
 
         init();
     </script>
 </body>
 </html>
+
