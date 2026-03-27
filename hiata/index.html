@@ -122,7 +122,6 @@
         #dialogue-container {
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-out;
             transform: translateY(22px) scale(0.985);
-            /* Z-index dinaikkan supaya tidak ditutupi butang UI kiri */
             z-index: 55;
         }
 
@@ -428,7 +427,9 @@
         }
 
         .story-chapter-btn.is-available { box-shadow: 0 14px 28px rgba(56, 189, 248, 0.18); }
-        .story-chapter-btn.is-locked { opacity: 0.6; cursor: not-allowed; }
+        
+        /* FIX: Tambah pointer-events: none supaya butang ini kebal dari klik jika ia locked */
+        .story-chapter-btn.is-locked { opacity: 0.6; cursor: not-allowed; pointer-events: none; }
 
         .chapter-meta { display: flex; flex-direction: column; gap: 4px; }
         .chapter-badge { font-size: 10px; text-transform: uppercase; letter-spacing: 0.32em; color: rgba(255, 255, 255, 0.6); }
@@ -613,7 +614,7 @@
                     <span class="left-control-icon">🫳</span>
                 </button>
 
-                <!-- 4: DIALOGUE (Kini di tengah menegak) -->
+                <!-- 4: DIALOGUE -->
                 <button id="dialogue-event-btn" class="left-control-btn" type="button" title="Berbual" aria-label="Berbual">
                     <span class="left-control-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px; color: white;">
@@ -622,7 +623,7 @@
                     </span>
                 </button>
 
-                <!-- 5: ITEM (Baru) -->
+                <!-- 5: ITEM -->
                 <button id="item-btn" class="left-control-btn" type="button" title="Pilih Item" aria-label="Pilih Item">
                     <span class="left-control-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; color: white;">
@@ -632,7 +633,7 @@
                     </span>
                 </button>
 
-                <!-- 6: STORY (Bawah Sekali) -->
+                <!-- 6: STORY -->
                 <button id="story-btn" class="left-control-btn" type="button" title="Cerita" aria-label="Cerita">
                     <span class="left-control-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width: 22px; height: 22px; color: white;">
@@ -724,7 +725,7 @@
             </div>
         </div>
 
-        <!-- DIALOGUE & CHOICES UI (Z-index tinggi supaya sentiasa di depan butang UI kiri) -->
+        <!-- DIALOGUE & CHOICES UI -->
         <div data-ui-layer="primary" class="game-ui-element hidden absolute bottom-5 left-4 right-4 z-50 flex flex-col gap-4 pointer-events-none">
             
             <div id="choices-container" class="w-full max-w-md mx-auto flex flex-col gap-3 hidden pointer-events-auto">
@@ -940,9 +941,21 @@
         function syncStoryChapters() {
             if (!chapter2Btn) return;
             const unlocked = readStorage(storageKeys.storyChapter2, 'false') === 'true';
-            chapter2Btn.disabled = !unlocked;
-            chapter2Btn.classList.toggle('is-locked', !unlocked);
-            chapter2Btn.classList.toggle('is-available', unlocked);
+            
+            if (unlocked) {
+                chapter2Btn.removeAttribute('disabled');
+                chapter2Btn.classList.remove('is-locked');
+                chapter2Btn.classList.add('is-available');
+                const lockSpan = chapter2Btn.querySelector('.chapter-lock');
+                if (lockSpan) {
+                    lockSpan.innerHTML = 'Mula';
+                    lockSpan.className = 'chapter-action';
+                }
+            } else {
+                chapter2Btn.setAttribute('disabled', 'true');
+                chapter2Btn.classList.add('is-locked');
+                chapter2Btn.classList.remove('is-available');
+            }
         }
 
         function unlockChapter2() { writeStorage(storageKeys.storyChapter2, 'true'); syncStoryChapters(); }
@@ -1211,7 +1224,12 @@
         startBtn.addEventListener('click', startApp);
         
         if (storyBtn) storyBtn.addEventListener('click', openStoryPanel);
-        if (exitBtn) { exitBtn.addEventListener('click', () => { navigateToLink(exitBtn); }); }
+        if (exitBtn) { 
+            exitBtn.addEventListener('click', (e) => { 
+                e.preventDefault(); 
+                navigateToLink(exitBtn); 
+            }); 
+        }
         if (storyCloseBtn) storyCloseBtn.addEventListener('click', closeStoryPanel);
         if (storyOverlay) storyOverlay.addEventListener('click', (e) => { if (e.target === storyOverlay) closeStoryPanel(); });
         
@@ -1225,8 +1243,12 @@
             });
         }
         if (chapter2Btn) {
-            chapter2Btn.addEventListener('click', () => { 
-                if (!chapter2Btn.disabled) navigateToLink(chapter2Btn); 
+            chapter2Btn.addEventListener('click', (e) => { 
+                if (chapter2Btn.hasAttribute('disabled') || chapter2Btn.classList.contains('is-locked')) {
+                    e.preventDefault();
+                    return;
+                }
+                navigateToLink(chapter2Btn); 
             });
         }
         
